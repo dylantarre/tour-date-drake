@@ -39,10 +39,18 @@ class TourDateAgent:
             
             # Premium Text Models
             "claude-3-sonnet": "anthropic/claude-3-sonnet-20240229",
-            "gpt-4": "openai/gpt-4-turbo-preview",
-            "gpt-4o": "openai/gpt-4",
-            "gpt-4-vision": "openai/gpt-4-vision-preview",
             "claude-3-opus": "anthropic/claude-3-opus-20240229",
+            
+            # OpenAI Models (ordered by price)
+            "gpt-4o-mini": "openai/gpt-4o-mini",  # $0.15/1M input
+            "gpt-4o-mini-dated": "openai/gpt-4o-mini-2024-07-18",  # $0.15/1M input
+            "gpt-4o": "openai/gpt-4o",  # $2.5/1M input
+            "gpt-4o-dated": "openai/gpt-4o-2024-11-20",  # $2.5/1M input
+            "gpt-4o-old": "openai/gpt-4o-2024-05-13",  # $5/1M input
+            "chatgpt-4o": "openai/chatgpt-4o-latest",  # $5/1M input
+            "gpt-4o-extended": "openai/gpt-4o:extended",  # $6/1M input
+            "gpt-4-turbo": "openai/gpt-4-turbo",  # $10/1M input
+            "o1": "openai/o1",  # $15/1M input
             
             # Auto-router
             "auto": "openrouter/auto"
@@ -74,10 +82,19 @@ class TourDateAgent:
             "google/gemini-pro-1.5": ["anthropic/claude-3-haiku", "amazon/nova-pro-v1"],
             
             # Premium text model fallbacks
-            "anthropic/claude-3-sonnet-20240229": ["openai/gpt-4-turbo-preview", "anthropic/claude-3-opus-20240229"],
-            "openai/gpt-4-turbo-preview": ["openai/gpt-4", "anthropic/claude-3-sonnet-20240229"],
-            "openai/gpt-4": ["anthropic/claude-3-sonnet-20240229", "anthropic/claude-3-opus-20240229"],
-            "anthropic/claude-3-opus-20240229": ["anthropic/claude-3-sonnet-20240229", "openai/gpt-4-turbo-preview"]
+            "anthropic/claude-3-sonnet-20240229": ["openai/gpt-4o", "anthropic/claude-3-opus-20240229"],
+            "anthropic/claude-3-opus-20240229": ["openai/gpt-4o", "anthropic/claude-3-sonnet-20240229"],
+            
+            # OpenAI model fallbacks (ordered by price)
+            "openai/gpt-4o-mini": ["openai/gpt-4o-mini-2024-07-18", "openai/gpt-4o"],
+            "openai/gpt-4o-mini-2024-07-18": ["openai/gpt-4o-mini", "openai/gpt-4o"],
+            "openai/gpt-4o": ["openai/gpt-4o-2024-11-20", "openai/chatgpt-4o-latest"],
+            "openai/gpt-4o-2024-11-20": ["openai/gpt-4o", "openai/gpt-4o-2024-05-13"],
+            "openai/gpt-4o-2024-05-13": ["openai/chatgpt-4o-latest", "openai/gpt-4o"],
+            "openai/chatgpt-4o-latest": ["openai/gpt-4o", "openai/gpt-4o-extended"],
+            "openai/gpt-4o:extended": ["openai/gpt-4-turbo", "openai/chatgpt-4o-latest"],
+            "openai/gpt-4-turbo": ["openai/gpt-4o:extended", "openai/o1"],
+            "openai/o1": ["openai/gpt-4-turbo", "openai/gpt-4o:extended"]
         }
         
         # Vision prompt for image analysis
