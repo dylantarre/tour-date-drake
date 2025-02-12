@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tour Date Parser</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #f3f4f6;
+            --bg-secondary: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-heading: #111827;
+            --border-color: #e5e7eb;
+            --accent-color: #2563eb;
+            --accent-hover: #1d4ed8;
+            --accent-light: #eff6ff;
+            --error-bg: #fee2e2;
+            --error-text: #dc2626;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --info-bg: #f0f9ff;
+            --info-border: #bae6fd;
+            --info-heading: #0369a1;
+            --info-text: #0c4a6e;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #111827;
+                --bg-secondary: #1f2937;
+                --text-primary: #f3f4f6;
+                --text-secondary: #9ca3af;
+                --text-heading: #f9fafb;
+                --border-color: #374151;
+                --accent-color: #3b82f6;
+                --accent-hover: #60a5fa;
+                --accent-light: #1e3a8a;
+                --error-bg: #7f1d1d;
+                --error-text: #fca5a5;
+                --shadow: 0 1px 3px rgba(0,0,0,0.3);
+                --info-bg: #082f49;
+                --info-border: #0c4a6e;
+                --info-heading: #7dd3fc;
+                --info-text: #e0f2fe;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            line-height: 1.5;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--bg-secondary);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        h1 {
+            font-size: 1.875rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-heading);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: none;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: var(--accent-color);
+            background: var(--accent-light);
+            font-weight: 500;
+        }
+
+        .tab:hover:not(.active) {
+            background: var(--bg-primary);
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        button {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background: var(--accent-hover);
+        }
+
+        button:disabled {
+            background: var(--accent-light);
+            opacity: 0.7;
+        }
+
+        .result-container {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .result {
+            font-family: 'Inter', -apple-system, sans-serif;
+            line-height: 1.6;
+            padding: 1rem;
+        }
+
+        .result h2 {
+            color: var(--text-heading);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+            opacity: 0;
+            transform: translateY(-5px);
+            animation: fadeInDown 0.3s ease-out forwards;
+            animation-delay: 0.1s;
+        }
+
+        .result h2:first-child {
+            margin-top: 0;
+        }
+        
+        .result ul {
+            list-style: none;
+            margin: 1rem 0;
+            padding-left: 0;
+            opacity: 0;
+            animation: fadeIn 0.3s ease-out forwards;
+            animation-delay: 0.2s;
+        }
+        
+        .result li {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        
+        .result li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--text-secondary);
+        }
+        
+        .result p {
+            margin: 1rem 0;
+            white-space: pre-wrap;
+        }
+        
+        .result hr {
+            margin: 2rem 0;
+            border: 0;
+            height: 2px;
+            background-color: var(--border-color);
+        }
+        
+        .result em {
+            display: block;
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-primary);
+            border-radius: 0.5rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .error {
+            color: var(--error-text);
+            background: var(--error-bg);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        .wave-loader {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 80px;
+            margin: 2rem 0;
+            position: relative;
+            gap: 8px;
+        }
+
+        .wave-bar {
+            width: 4px;
+            height: 24px;
+            background: var(--accent-color);
+            border-radius: 2px;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+
+        .wave-text {
+            position: absolute;
+            bottom: -24px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            opacity: 0.8;
+        }
+
+        @keyframes wave {
+            0%, 100% { 
+                transform: scaleY(0.5);
+                opacity: 0.5;
+            }
+            50% { 
+                transform: scaleY(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .streaming-content {
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Theme toggle button */
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-primary);
+        }
+
+        .theme-toggle svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-primary);
+            transition: fill 0.3s ease;
+        }
+
+        .theme-toggle .sun {
+            display: none;
+        }
+
+        .theme-toggle .moon {
+            display: block;
+        }
+
+        [data-theme="dark"] .theme-toggle .sun {
+            display: block;
+        }
+
+        [data-theme="dark"] .theme-toggle .moon {
+            display: none;
+        }
+
+        @media (hover: hover) {
+            .theme-toggle:hover {
+                transform: scale(1.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+            <svg class="sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.515 4.929l1.414-1.414L7.05 5.636 5.636 7.05 3.515 4.93zM16.95 18.364l1.414-1.414 2.121 2.121-1.414 1.414-2.121-2.121zm2.121-14.85l1.414 1.415-2.121 2.121-1.414-1.414 2.121-2.121zM5.636 16.95l1.414 1.414-2.121 2.121-1.414-1.414 2.121-2.121zM23 11v2h-3v-2h3zM4 11v2H1v-2h3z"/>
+            </svg>
+            <svg class="moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>
+            </svg>
+        </button>
+        <h1>Tour Date Parser</h1>
+        
+        <div class="tabs">
+            <button class="tab active" data-input="url">Image URL</button>
+            <button class="tab" data-input="text">Text Input</button>
+        </div>
+
+        <div id="url-input" class="input-group">
+            <label for="image-url">Tour Poster URL</label>
+            <input type="text" id="image-url" placeholder="https://example.com/tour-poster.jpg">
+        </div>
+
+        <div id="text-input" class="input-group" style="display: none;">
+            <label for="text-content">Tour Dates Text</label>
+            <textarea id="text-content" placeholder="Paste your tour dates here. They will be formatted as:
+01/23 City, ST @ Venue Name
+01/24 City, ST @ Venue Name *
+
+* special notes will be preserved"></textarea>
+        </div>
+
+        <div class="input-group">
+            <label for="output-format">Output Format</label>
+            <select id="output-format">
+                <option value="lambgoat">Lambgoat (MM/DD/YYYY - Venue - City)</option>
+                <option value="needledrop">The Needle Drop (Detailed Format)</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="model">AI Model</label>
+            <select id="model">
+                <optgroup label="Free Models">
+                    <option value="gemini-2-flash-lite">Gemini 2.0 Flash Lite - Free, fast (google/gemini-2.0-flash-lite-preview-02-05:free)</option>
+                    <option value="qwen-vl-plus">Qwen VL Plus - Free, reliable (qwen/qwen-vl-plus:free)</option>
+                    <option value="llama-3-vision">Llama 3.2 11B Vision - Free (meta-llama/llama-3.2-11b-vision-instruct:free)</option>
+                </optgroup>
+                <optgroup label="Budget Models">
+                    <option value="nova-lite">Nova Lite - Fast ($0.06/M) (amazon/nova-lite-v1)</option>
+                    <option value="gemini-flash">Gemini Flash 1.5 8B - Quick ($0.037/M) (google/gemini-flash-1.5-8b)</option>
+                    <option value="mixtral">Mixtral 8x7B - Open source ($0.1/M) (mistralai/mixtral-8x7b-instruct)</option>
+                </optgroup>
+                <optgroup label="Standard Models">
+                    <option value="claude-3-haiku">Claude 3 Haiku - Fast ($0.25/M) (anthropic/claude-3-haiku)</option>
+                    <option value="nova-pro">Nova Pro - Balanced ($0.8/M) (amazon/nova-pro-v1)</option>
+                    <option value="gemini-pro">Gemini Pro 1.5 - Strong ($1.25/M) (google/gemini-pro-1.5)</option>
+                </optgroup>
+                <optgroup label="Premium Models">
+                    <option value="claude-3-sonnet">Claude 3.5 Sonnet - Balanced ($3/M) (anthropic/claude-3.5-sonnet)</option>
+                    <option value="gpt-4o">GPT-4 Optimized - Reliable ($2.5/M) (openai/gpt-4o)</option>
+                    <option value="claude-3-opus">Claude 3.5 Opus - Most capable ($15/M) (anthropic/claude-3.5-opus)</option>
+                    <option value="auto">Auto - Best available model (openrouter/auto)</option>
+                </optgroup>
+            </select>
+            <small style="display: block; margin-top: 0.5rem; color: var(--text-secondary);">Models are organized by price tier. Free models are great for testing, while premium models offer best quality.</small>
+        </div>
+
+        <div class="info-box" style="margin-bottom: 1.5rem; padding: 1rem; background: var(--info-bg); border: 1px solid var(--info-border); border-radius: 6px;">
+            <h3 style="margin-bottom: 0.5rem; color: var(--info-heading);">About Tour Date Drake</h3>
+            <p style="color: var(--info-text);">
+                Tour Date Drake helps format tour dates consistently. For images, it will:
+                <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+                    <li>Extract tour/festival names</li>
+                    <li>List all bands involved</li>
+                    <li>Format dates as MM/DD City, ST @ Venue Name</li>
+                    <li>Preserve special characters and notes</li>
+                    <li>Mark unclear information with [?] or omit it</li>
+                </ul>
+            </p>
+        </div>
+
+        <button onclick="parseDates()" id="parse-button">Parse Tour Dates</button>
+
+        <div class="result-container" style="display: none;">
+            <div class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Theme handling
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            updateThemeIcon(theme);
+        }
+
+        function updateThemeIcon(theme) {
+            const sunIcon = document.querySelector('.theme-toggle .sun');
+            const moonIcon = document.querySelector('.theme-toggle .moon');
+            if (theme === 'dark') {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        }
+
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            setTheme(savedTheme);
+        } else {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            setTheme(prefersDark ? 'dark' : 'light');
+        }
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (!localStorage.getItem('theme')) {
+                setTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update active tab
+                document.querySelector('.tab.active').classList.remove('active');
+                tab.classList.add('active');
+                
+                // Show/hide input sections
+                const inputType = tab.dataset.input;
+                document.getElementById('url-input').style.display = inputType === 'url' ? 'block' : 'none';
+                document.getElementById('text-input').style.display = inputType === 'text' ? 'block' : 'none';
+                
+                // Update model options based on tab
+                const modelSelect = document.getElementById('model');
+                const visionModels = {
+                    "Vision Models": {
+                        "gemini-2-flash-lite": "Gemini 2.0 Flash Lite - Free, fast (google/gemini-2.0-flash-lite-preview-02-05:free)",
+                        "qwen-vl-plus": "Qwen VL Plus - Free, reliable (qwen/qwen-vl-plus:free)",
+                        "llama-3-vision": "Llama 3.2 11B Vision - Free (meta-llama/llama-3.2-11b-vision-instruct:free)",
+                        "gemini-2-flash": "Gemini 2.0 Flash - Fast ($0.1/M) (google/gemini-2.0-flash-001)",
+                        "gemini-pro-vision": "Gemini Pro Vision - Balanced ($0.5/M) (google/gemini-pro-vision)",
+                        "gpt-4-vision": "GPT-4 Vision - Best quality ($15/M) (openai/gpt-4-vision-preview)",
+                        "auto": "Auto - Best available model (openrouter/auto)"
+                    }
+                };
+                
+                const textModels = {
+                    "Free Models": {
+                        "gemini-2-pro": "Gemini 2.0 Pro - Free, 2M context (google/gemini-2.0-pro-exp-02-05:free)",
+                        "llama-3-11b": "Llama 3.2 11B - Free, 131K context (meta-llama/llama-3.2-11b-vision-instruct:free)",
+                        "qwen-72b": "Qwen 2.5 72B - Free, 131K context (qwen/qwen2.5-vl-72b-instruct:free)"
+                    },
+                    "Budget Models": {
+                        "nova-lite": "Nova Lite - Fast ($0.06/M) (amazon/nova-lite-v1)",
+                        "gemini-flash": "Gemini Flash 1.5 8B - Quick ($0.037/M) (google/gemini-flash-1.5-8b)",
+                        "mixtral": "Mixtral 8x7B - Open source ($0.1/M) (mistralai/mixtral-8x7b-instruct)"
+                    },
+                    "Standard Models": {
+                        "claude-3-haiku": "Claude 3 Haiku - Fast ($0.25/M) (anthropic/claude-3-haiku)",
+                        "nova-pro": "Nova Pro - Balanced ($0.8/M) (amazon/nova-pro-v1)",
+                        "gemini-pro": "Gemini Pro 1.5 - Strong ($1.25/M) (google/gemini-pro-1.5)"
+                    },
+                    "Premium Models": {
+                        "claude-3-sonnet": "Claude 3.5 Sonnet - Balanced ($3/M) (anthropic/claude-3.5-sonnet)",
+                        "gpt-4o": "GPT-4 Optimized - Reliable ($2.5/M) (openai/gpt-4o)",
+                        "claude-3-opus": "Claude 3.5 Opus - Most capable ($15/M) (anthropic/claude-3.5-opus)",
+                        "auto": "Auto - Best available model (openrouter/auto)"
+                    }
+                };
+                
+                const models = inputType === 'url' ? visionModels : textModels;
+                modelSelect.innerHTML = '';
+                
+                for (const [group, groupModels] of Object.entries(models)) {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = group;
+                    
+                    for (const [value, text] of Object.entries(groupModels)) {
+                        const option = document.createElement('option');
+                        option.value = value;
+                        option.textContent = text;
+                        optgroup.appendChild(option);
+                    }
+                    
+                    modelSelect.appendChild(optgroup);
+                }
+            });
+        });
+
+        async function parseDates() {
+            const button = document.getElementById('parse-button');
+            const resultContainer = document.querySelector('.result-container');
+            const resultDiv = document.querySelector('.result');
+            
+            // Validate input
+            const activeTab = document.querySelector('.tab.active').dataset.input;
+            const inputValue = activeTab === 'url' 
+                ? document.getElementById('image-url').value 
+                : document.getElementById('text-content').value;
+
+            if (!inputValue.trim()) {
+                resultDiv.innerHTML = `Error: Please provide ${activeTab === 'url' ? 'an image URL' : 'tour date text'}`;
+                resultDiv.className = 'result error';
+                resultContainer.style.display = 'block';
+                return;
+            }
+
+            // Show loading state
+            button.disabled = true;
+            button.innerHTML = '<span class="loading"></span>Processing...';
+            resultContainer.style.display = 'none';
+
+            const outputFormat = document.getElementById('output-format').value;
+            const model = document.getElementById('model').value;
+
+            const requestBody = {
+                output_format: outputFormat,
+                model: model
+            };
+
+            if (activeTab === 'url') {
+                requestBody.image_url = inputValue;
+            } else {
+                requestBody.text_input = inputValue;
+            }
+
+            try {
+                const response = await fetch('/parse_tour_dates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('Response status:', response.status);  // Debug log
+                console.log('Response headers:', response.headers);  // Debug log
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);  // Debug log
+                    throw new Error(`Server error: ${response.status} ${errorText}`);
+                }
+
+                // Clear previous content and show loader
+                resultDiv.innerHTML = `
+                    <div class="wave-loader">
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-text">Processing your request...</div>
+                    </div>
+                `;
+                resultDiv.className = 'result';
+                resultContainer.style.display = 'block';
+
+                let fullResponse = '';
+                let lastChunk = '';  // Keep track of incomplete chunks
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const {value, done} = await reader.read();
+                    if (done) {
+                        // Process any remaining data in lastChunk
+                        if (lastChunk) {
+                            console.log('Processing final chunk:', lastChunk);  // Debug log
+                            try {
+                                const data = JSON.parse(lastChunk.slice(6));  // Remove "data: " prefix
+                                if (data.choices?.[0]?.delta?.content) {
+                                    fullResponse += data.choices[0].delta.content;
+                                }
+                            } catch (e) {
+                                console.warn('Error processing final chunk:', e);  // Debug log
+                            }
+                        }
+                        break;
+                    }
+                    
+                    const text = decoder.decode(value);
+                    console.log('Received raw chunk:', text);  // Debug log
+                    
+                    // Combine with any leftover data from last chunk
+                    const combinedText = lastChunk + text;
+                    const lines = combinedText.split('\n');
+                    
+                    // The last line might be incomplete, save it for next time
+                    lastChunk = lines[lines.length - 1];
+                    
+                    // Process all complete lines
+                    for (let i = 0; i < lines.length - 1; i++) {
+                        const line = lines[i].trim();
+                        if (!line) continue;
+                        
+                        console.log('Processing line:', line);  // Debug log
+                        
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));  // Remove "data: " prefix
+                                console.log('Parsed data:', data);  // Debug log
+                                
+                                if (data.choices?.[0]?.delta?.content) {
+                                    const content = data.choices[0].delta.content;
+                                    console.log('Content chunk:', content);  // Debug log
+                                    fullResponse += content;
+                                    
+                                    // Update display with current progress
+                                    const formattedContent = fullResponse
+                                        .replace(/\n/g, '  \n')  // Add markdown line breaks
+                                        .replace(/^[-*]\s/gm, '• ');  // Convert list markers to bullets
+
+                                    // Only update the display if we have a complete section or enough content
+                                    if (fullResponse.includes('##') || fullResponse.length > 50) {
+                                        resultDiv.innerHTML = marked.parse(formattedContent);
+                                    } else {
+                                        // For initial content, show a placeholder structure
+                                        resultDiv.innerHTML = `
+                                            <div class="wave-loader">
+                                                <div class="wave-bar"></div>
+                                                <div class="wave-bar"></div>
+                                                <div class="wave-bar"></div>
+                                                <div class="wave-bar"></div>
+                                                <div class="wave-bar"></div>
+                                                <div class="wave-text">Analyzing content...</div>
+                                            </div>
+                                            <div class="streaming-content">
+                                                ${marked.parse(formattedContent)}
+                                            </div>
+                                        `;
+                                    }
+                                }
+                                
+                                if (data.choices?.[0]?.finish_reason === 'stop') {
+                                    console.log('Received stop signal');  // Debug log
+                                    break;
+                                }
+                            } catch (e) {
+                                console.warn('Error processing line:', e, 'Line:', line);  // Debug log
+                                // Continue processing other lines
+                                continue;
+                            }
+                        } else if (line.startsWith('error: ')) {
+                            const errorMsg = line.slice(7);
+                            console.error('Stream error:', errorMsg);  // Debug log
+                            throw new Error(errorMsg);
+                        }
+                    }
+                }
+
+                console.log('Final full response:', fullResponse);  // Debug log
+
+                if (!fullResponse.trim()) {
+                    throw new Error('No content received from the model');
+                }
+
+                // Configure marked for GitHub Flavored Markdown
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true,
+                    headerIds: false,
+                    mangle: false
+                });
+
+                // Format and render the complete response
+                const formattedResponse = fullResponse
+                    .replace(/\n/g, '  \n')  // Add markdown line breaks
+                    .replace(/^[-*]\s/gm, '• '); // Convert list markers to bullets
+
+                console.log('Final formatted response:', formattedResponse);  // Debug log
+                resultDiv.innerHTML = marked.parse(formattedResponse);
+            } catch (error) {
+                console.error('Error:', error);  // Debug log
+                resultDiv.innerHTML = `Error: ${error.message}`;
+                resultDiv.className = 'result error';
+                resultContainer.style.display = 'block';
+            } finally {
+                // Reset button state
+                button.disabled = false;
+                button.innerHTML = 'Parse Tour Dates';
+            }
+        }
+    </script>
+</body>
+</html> 
