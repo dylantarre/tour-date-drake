@@ -41,7 +41,8 @@ class TourDateAgent:
             "claude-3-sonnet": "anthropic/claude-3-sonnet-20240229",
             "gpt-4": "openai/gpt-4-turbo-preview",
             "gpt-4o": "openai/gpt-4",
-            "claude-3-opus": "anthropic/claude-3.5-opus",
+            "gpt-4-vision": "openai/gpt-4-vision-preview",
+            "claude-3-opus": "anthropic/claude-3-opus-20240229",
             
             # Auto-router
             "auto": "openrouter/auto"
@@ -73,10 +74,10 @@ class TourDateAgent:
             "google/gemini-pro-1.5": ["anthropic/claude-3-haiku", "amazon/nova-pro-v1"],
             
             # Premium text model fallbacks
-            "anthropic/claude-3-sonnet-20240229": ["openai/gpt-4", "anthropic/claude-3.5-opus"],
-            "openai/gpt-4": ["anthropic/claude-3-sonnet-20240229", "anthropic/claude-3.5-opus"],
+            "anthropic/claude-3-sonnet-20240229": ["openai/gpt-4-turbo-preview", "anthropic/claude-3-opus-20240229"],
             "openai/gpt-4-turbo-preview": ["openai/gpt-4", "anthropic/claude-3-sonnet-20240229"],
-            "anthropic/claude-3.5-opus": ["anthropic/claude-3-sonnet-20240229", "openai/gpt-4"]
+            "openai/gpt-4": ["anthropic/claude-3-sonnet-20240229", "anthropic/claude-3-opus-20240229"],
+            "anthropic/claude-3-opus-20240229": ["anthropic/claude-3-sonnet-20240229", "openai/gpt-4-turbo-preview"]
         }
         
         # Vision prompt for image analysis
