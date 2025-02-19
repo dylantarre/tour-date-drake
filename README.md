@@ -1,68 +1,82 @@
-# Tour Date Parser
+# Tour Date Drake
 
-A service that extracts and formats tour dates from images or text using various vision models through OpenRouter.
+A FastAPI service that formats tour dates from both text and images using OpenRouter's AI models, with an optional Discord bot interface.
+
+## Features
+
+- Text input: Format tour dates from text using GPT-4
+- Image input: Extract and format tour dates from images using Claude-3
+- Consistent output format: MM/DD City, ST @ Venue Name
+- Discord bot integration: Use the service directly from Discord
+
+## Requirements
+
+- Docker
+- OpenRouter API key
+- Discord bot token (optional)
 
 ## Setup
 
-1. Copy `.env.example` to `.env` and add your OpenRouter API key:
-```bash
-cp .env.example .env
+1. Create a `.env` file with your API keys:
+```
+OPENROUTER_API_KEY=your_key_here
+DISCORD_TOKEN=your_discord_token_here  # Optional, for Discord bot
+API_URL=http://localhost:4343          # URL where the API is running
 ```
 
-2. Run with Docker Compose:
+2. Build and run the Docker container:
 ```bash
-docker-compose up -d
+docker build -t tour-date-drake .
+docker run -p 4343:4343 --env-file .env tour-date-drake
 ```
 
-The service will be available at http://localhost:4242
+The API will be available at http://localhost:4343
 
-## Development
+## Discord Bot Setup
 
-To run in development mode with live reload:
+1. Create a new Discord application at https://discord.com/developers/applications
+2. Create a bot for your application and copy the token
+3. Add the bot token to your `.env` file
+4. Run the bot:
 ```bash
-docker-compose up
+python bot_runner.py
 ```
 
-To rebuild after making changes:
+### Discord Commands
+
+- `/dates [text]` - Format tour dates from text
+- `/dates` with an attached image - Extract and format tour dates from an image
+
+## API Endpoints
+
+### Format Text
 ```bash
-docker-compose up --build
+curl -X POST "http://localhost:4343/format/text" \
+     -H "Content-Type: application/json" \
+     -d '{"text": "1/1 New York, NY @ Madison Square Garden"}'
 ```
 
-## API Usage
+### Format Image
+```bash
+curl -X POST "http://localhost:4343/format/image" \
+     -H "Content-Type: multipart/form-data" \
+     -F "file=@path/to/image.jpg"
+```
 
-### Endpoint: POST /parse_tour_dates
+## Response Format
 
-Request body:
+Both endpoints return JSON in the format:
 ```json
 {
-    "image_url": "https://example.com/tour-poster.jpg",  // Optional
-    "text_input": "Tour dates in text format",           // Optional
-    "output_format": "lambgoat",                         // or "needledrop"
-    "model": "openai/gpt-4-vision-preview"               // Optional, defaults to OpenAI
+    "formatted_dates": "MM/DD City, ST @ Venue Name\nMM/DD City, ST @ Venue Name"
 }
 ```
 
-Example formats:
+## Error Handling
 
-1. Lambgoat:
-```
-MM/DD/YYYY - Venue Name - City, State/Country
-```
-
-2. The Needle Drop:
-```
-Date: MM/DD/YYYY
-Venue: Venue Name
-Location: City, State/Country
-```
-
-### Example cURL:
-```bash
-curl -X POST "http://localhost:4242/parse_tour_dates" \
-     -H "Content-Type: application/json" \
-     -d '{
-           "image_url": "https://example.com/tour-poster.jpg",
-           "output_format": "lambgoat",
-           "model": "openai/gpt-4-vision-preview"
-         }'
+Errors are returned as HTTP status codes with JSON details:
+```json
+{
+    "detail": "Error message"
+}
 ``` 

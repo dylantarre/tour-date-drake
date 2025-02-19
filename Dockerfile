@@ -6,12 +6,16 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire app directory
-COPY app/ ./app/
+# Copy the app code and bot runner
+COPY app app/
+COPY bot_runner.py .
 
-# Copy environment file
-COPY .env.example .env
+EXPOSE 4343
 
-EXPOSE 4242
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "4242", "--reload"] 
+# Use environment variable to determine which service to run
+ENV SERVICE=api
+CMD if [ "$SERVICE" = "bot" ]; then \
+        python bot_runner.py; \
+    else \
+        uvicorn app.main:app --host 0.0.0.0 --port 4343; \
+    fi 
