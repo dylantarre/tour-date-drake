@@ -3,16 +3,12 @@ services:
     build: .
     ports:
       - "4343:4343"
-    env_file:
-      - .env
     environment:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - SERVICE=api
 
   bot:
     build: .
-    env_file:
-      - .env
     environment:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - DISCORD_TOKEN=${DISCORD_TOKEN}
