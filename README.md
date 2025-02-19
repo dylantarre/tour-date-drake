@@ -1,4 +1,4 @@
-# Tour Date Drake
+# Better Lover
 
 A FastAPI service that formats tour dates from both text and images using OpenRouter's AI models, with an optional Discord bot interface.
 

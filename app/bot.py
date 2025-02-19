@@ -79,7 +79,7 @@ async def dates(interaction: discord.Interaction, text: str):
                     
                 result = await response.json()
 
-            formatted_dates = result.get("formatted_dates", "Error: No dates found")
+            formatted_dates = result.get("formatted_dates", "Error: No dates found") + "\n\nPlease double-check all info as Better Lover can make mistakes."
             logger.info(f"Sending formatted response to Discord: {formatted_dates}")
             
             # Split long messages
@@ -152,7 +152,7 @@ async def read(interaction: discord.Interaction, image: discord.Attachment):
                 result = await response.json()
                 logger.info(f"Parsed API response: {result}")
 
-            formatted_dates = result.get("formatted_dates", "Error: No dates found")
+            formatted_dates = result.get("formatted_dates", "Error: No dates found") + "\n\nPlease double-check all info as Better Lover can make mistakes."
             logger.info(f"Sending formatted response to Discord: {formatted_dates}")
             
             # Split long messages
@@ -235,7 +235,7 @@ async def imageurl(interaction: discord.Interaction, url: str):
                     result = await api_response.json()
                     logger.info(f"Parsed API response: {result}")
 
-            formatted_dates = result.get("formatted_dates", "Error: No dates found")
+            formatted_dates = result.get("formatted_dates", "Error: No dates found") + "\n\nPlease double-check all info as Better Lover can make mistakes."
             logger.info(f"Sending formatted response to Discord: {formatted_dates}")
             
             # Split long messages

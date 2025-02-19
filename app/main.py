@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-app = FastAPI(title="Tour Date Drake")
+app = FastAPI(title="Better Lover")
 
 # Add CORS middleware
 app.add_middleware(
@@ -31,8 +31,8 @@ def init_openai_client():
         base_url="https://openrouter.ai/api/v1",
         api_key=os.environ.get("OPENROUTER_API_KEY"),
         default_headers={
-            "HTTP-Referer": "https://github.com/dylantarre/tour-date-drake",
-            "X-Title": "Tour Date Drake"
+            "HTTP-Referer": "https://github.com/dylantarre/better-lover",
+            "X-Title": "Better Lover"
         },
         timeout=120.0  # Increased to 120 seconds
     )
@@ -58,7 +58,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are Tour Date Drake, an expert at formatting tour dates from images. Your task is to extract tour dates from images and format them as MM/DD followed by City, ST @ Venue Name, with special characters preserved and dates separated by line breaks."
+                        "content": "You are Better Lover, an expert at formatting tour dates from images. Your task is to extract tour dates from images and format them as MM/DD followed by City, ST @ Venue Name, with special characters preserved and dates separated by line breaks."
                     },
                     {
                         "role": "user",
@@ -101,7 +101,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
                 raise HTTPException(status_code=500, detail="No content in AI service response")
                 
             logger.info(f"Successfully extracted content: {content}")
-            return content + "\n\nPlease double-check all info as Tour Date Drake can make mistakes."
+            return content + "\n\nPlease double-check all info as Better Lover can make mistakes."
             
         except Exception as e:
             if attempt < max_retries - 1:
@@ -123,7 +123,7 @@ async def process_text(client: OpenAI, text: str) -> str:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are Tour Date Drake, an expert at formatting tour dates from text. Format dates as MM/DD followed by City, ST @ Venue Name, with special characters preserved and dates separated by line breaks."
+                        "content": "You are Better Lover, an expert at formatting tour dates from text. Format dates as MM/DD followed by City, ST @ Venue Name, with special characters preserved and dates separated by line breaks."
                     },
                     {
                         "role": "user",
@@ -133,7 +133,7 @@ async def process_text(client: OpenAI, text: str) -> str:
                 max_tokens=1000
             )
             logger.info(f"Received response from GPT-4: {response.choices[0].message.content}")
-            return response.choices[0].message.content + "\n\nPlease double-check all info as Tour Date Drake can make mistakes."
+            return response.choices[0].message.content + "\n\nPlease double-check all info as Better Lover can make mistakes."
         except Exception as e:
             if attempt < max_retries - 1:
                 logger.warning(f"Attempt {attempt + 1} failed, retrying in {retry_delay} seconds: {str(e)}")
