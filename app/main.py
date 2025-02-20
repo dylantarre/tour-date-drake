@@ -69,6 +69,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
 
 FORMATTING RULES:
 - **Date format must be MM/DD without any dashes or hyphens (e.g., "06/15" not "06/15 -")**
+- **Absolutely no dashes in the final output**
 - **Always format as: MM/DD City, ST @ Venue**
 - For US states, ST is the state code (e.g., NY, CA)
 - For countries, ST is the country code (e.g., DE, UK)
@@ -98,9 +99,8 @@ Mixed Tour:
 06/21 Toronto, ON @ The Opera House *
 
 Common Mistakes to Avoid:
-
-- Using dashes after dates: Use "06/15" not "06/15 -"
-- Incorrect city/ST order: Use "Leeuwarden, NL" 
+- Using dashes after in dates 
+- Incorrect city/ST order: Use "Leeuwarden, NL" not "NL, Leeuwarden"
 
 * Early show
 
@@ -170,6 +170,7 @@ async def process_text(client: OpenAI, text: str) -> str:
 
 FORMATTING RULES:
 - **Date format must be MM/DD without any dashes or hyphens (e.g., "06/15" not "06/15 -")**
+- **Absolutely no dashes in the final output**
 - **Always format as: MM/DD City, ST @ Venue**
 - For US states, ST is the state code (e.g., NY, CA)
 - For countries, ST is the country code (e.g., DE, UK)
@@ -199,7 +200,7 @@ Mixed Tour:
 06/21 Toronto, ON @ The Opera House *
 
 Common Mistakes to Avoid:
-- Using dashes in dates: Use "06/15" not "06/15 -"
+- Using dashes after dates
 - Incorrect city/ST order: Use "Leeuwarden, NL" not "NL, Leeuwarden"
 
 * Early show
