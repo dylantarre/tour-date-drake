@@ -43,7 +43,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"Processing image with model 'o1' (attempt {attempt + 1}/{max_retries})")
+            logger.info(f"Processing image with model 'gemini-2.0-pro-exp-02-05' (attempt {attempt + 1}/{max_retries})")
             
             # For URLs, send the URL directly. For uploaded files, use the data URL as is
             image_content = {
@@ -54,7 +54,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
             }
             
             response = client.chat.completions.create(
-                model="o1",
+                model="gemini-2.0-pro-exp-02-05",
                 messages=[
                     {
                         "role": "system",
@@ -68,14 +68,14 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
                                 "text": """Please extract and format all tour dates from this image using these rules:
 
 FORMATTING RULES:
-- **Date format must be MM/DD without any dashes or hyphens (e.g., "06/15" not "06/15 -")**
-- **Absolutely no dashes in the final output**
-- **Always format as: MM/DD City, ST @ Venue**
+- **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15" not "06/15 -")**
+- **ABSOLUTELY NO DASHES in the final output**
+- **Always format as: MM/DD City, ST @ Venue (if venue is known)**
+- If venues are listed separately, match them to the correct dates. If a venue cannot be matched, omit it.
 - For US states, ST is the state code (e.g., NY, CA)
 - For countries, ST is the country code (e.g., DE, UK)
 - All state/country codes must be two letters and in caps
 - **City comes first, then ST (e.g., "Leeuwarden, NL" not "NL, Leeuwarden")**
-- Include @ symbol only if venue is specified
 - Separate each date with a line break
 - Preserve any special characters in city names
 - Remove any dashes, commas, or extra formatting from the original text
@@ -97,9 +97,10 @@ Mixed Tour:
 06/15 Brooklyn, NY @ Saint Vitus
 06/20 Hamburg, DE @ Viper Room
 06/21 Toronto, ON @ The Opera House *
+06/23 Karlsruhe, DE @ Die Stadtmitte
 
 Common Mistakes to Avoid:
-- Using dashes after in dates 
+- Using dashes in dates: Use "06/15" not "06/15 -"
 - Incorrect city/ST order: Use "Leeuwarden, NL" not "NL, Leeuwarden"
 
 * Early show
@@ -113,7 +114,7 @@ Note: Always verify all dates and venue information as accuracy is crucial."""
                 max_tokens=2000
             )
             
-            logger.info(f"Received response from model 'o1': {response}")
+            logger.info(f"Received response from model 'gemini-2.0-pro-exp-02-05': {response}")
             
             if hasattr(response, 'error'):
                 error_msg = response.error.get('message', 'Unknown error')
@@ -156,9 +157,9 @@ async def process_text(client: OpenAI, text: str) -> str:
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"Processing text with GPT-4 (attempt {attempt + 1}/{max_retries})")
+            logger.info(f"Processing text with gemini-2.0-pro-exp-02-05(attempt {attempt + 1}/{max_retries})")
             response = client.chat.completions.create(
-                model="openai/gpt-4",
+                model="gemini-2.0-pro-exp-02-05",
                 messages=[
                     {
                         "role": "system",
@@ -166,17 +167,17 @@ async def process_text(client: OpenAI, text: str) -> str:
                     },
                     {
                         "role": "user",
-                        "content": f"""Format these tour dates using these rules:
+                        "content": f"""Please extract and format all tour dates from this text using these rules:
 
 FORMATTING RULES:
-- **Date format must be MM/DD without any dashes or hyphens (e.g., "06/15" not "06/15 -")**
-- **Absolutely no dashes in the final output**
-- **Always format as: MM/DD City, ST @ Venue**
+- **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15" not "06/15 -")**
+- **ABSOLUTELY NO DASHES in the final output**
+- **Always format as: MM/DD City, ST @ Venue (if venue is known)**
+- If venues are listed separately, match them to the correct dates. If a venue cannot be matched, omit it.
 - For US states, ST is the state code (e.g., NY, CA)
 - For countries, ST is the country code (e.g., DE, UK)
 - All state/country codes must be two letters and in caps
 - **City comes first, then ST (e.g., "Leeuwarden, NL" not "NL, Leeuwarden")**
-- Include @ symbol only if venue is specified
 - Separate each date with a line break
 - Preserve any special characters in city names
 - Remove any dashes, commas, or extra formatting from the original text
@@ -198,9 +199,10 @@ Mixed Tour:
 06/15 Brooklyn, NY @ Saint Vitus
 06/20 Hamburg, DE @ Viper Room
 06/21 Toronto, ON @ The Opera House *
+06/23 Karlsruhe, DE @ Die Stadtmitte
 
 Common Mistakes to Avoid:
-- Using dashes after dates
+- Using dashes in dates: Use "06/15" not "06/15 -"
 - Incorrect city/ST order: Use "Leeuwarden, NL" not "NL, Leeuwarden"
 
 * Early show
@@ -212,7 +214,7 @@ Here are the dates to format: {text}"""
                 ],
                 max_tokens=2000
             )
-            logger.info(f"Received response from GPT-4: {response.choices[0].message.content}")
+            logger.info(f"Received response from model 'gemini-2.0-pro-exp-02-05': {response.choices[0].message.content}")
             return response.choices[0].message.content + "\n\nPlease double-check all info as Tour Date Drake can make mistakes."
         except Exception as e:
             if attempt < max_retries - 1:
