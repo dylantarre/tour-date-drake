@@ -58,7 +58,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are Tour Date Drake, a helpful assistant that formats tour dates for metal, punk, and hardcore shows."
+                        "content": "You are Tour Date Drake, a helpful assistant that formats tour dates."
                     },
                     {
                         "role": "user",
@@ -73,12 +73,12 @@ FORMATTING RULES:
 - Format as: City, COUNTRY @ Venue (if venue is known)
 - If no venue is specified, format as: City, COUNTRY
 - Use proper capitalization for cities
-- Country codes should be in caps (DE, UK, NL, etc.)
+- COUNTRY should always use two letters (e.g., DE, UK, NL, etc.)
+- COUNTRY codes should be in caps (DE, UK, NL, etc.)
 - Include @ symbol only if venue is specified
 - Separate each date with a line break
 - Preserve any special characters in city names
-- If venues are listed separately, try to match them with the correct dates
-- Remove any dashes or extra formatting from the original text
+- Remove any dashes or extra formatting from the original text and use the preferred format
 
 EXAMPLE OUTPUTS:
 
@@ -157,7 +157,7 @@ async def process_text(client: OpenAI, text: str) -> str:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are Tour Date Drake, a helpful assistant that formats tour dates for metal, punk, and hardcore shows."
+                        "content": "You are Tour Date Drake, a helpful assistant that formats tour dates."
                     },
                     {
                         "role": "user",
@@ -169,12 +169,12 @@ FORMATTING RULES:
 - Format as: City, COUNTRY @ Venue (if venue is known)
 - If no venue is specified, format as: City, COUNTRY
 - Use proper capitalization for cities
-- Country codes should be in caps (DE, UK, NL, etc.)
+- COUNTRY should always use two letters (e.g., DE, UK, NL, etc.)
+- COUNTRY codes should be in caps (DE, UK, NL, etc.)
 - Include @ symbol only if venue is specified
 - Separate each date with a line break
 - Preserve any special characters in city names
-- If venues are listed separately, try to match them with the correct dates
-- Remove any dashes or extra formatting from the original text
+- Remove any dashes or extra formatting from the original text and use the preferred format
 
 EXAMPLE OUTPUTS:
 
