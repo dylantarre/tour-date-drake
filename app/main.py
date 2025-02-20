@@ -43,7 +43,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"Processing image with Claude-3 (attempt {attempt + 1}/{max_retries})")
+            logger.info(f"Processing image with o1 (attempt {attempt + 1}/{max_retries})")
             
             # For URLs, send the URL directly. For uploaded files, use the data URL as is
             image_content = {
@@ -54,7 +54,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
             }
             
             response = client.chat.completions.create(
-                model="anthropic/claude-3-opus",
+                model="o1",
                 messages=[
                     {
                         "role": "system",
@@ -68,12 +68,12 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
                                 "text": """Please extract and format all tour dates from this image using these rules:
 
 FORMATTING RULES:
-- Date format must be MM/DD without any dashes (e.g., "06/15" not "06/15 -")
-- Always format as: MM/DD City, ST @ Venue
+- **Date format must be MM/DD without any dashes or hyphens (e.g., "06/15" not "06/15 -")**
+- **Always format as: MM/DD City, ST @ Venue**
 - For US states, ST is the state code (e.g., NY, CA)
 - For countries, ST is the country code (e.g., DE, UK)
 - All state/country codes must be two letters and in caps
-- City comes first, then ST (e.g., "Hamburg, DE" not "DE, Hamburg")
+- **City comes first, then ST (e.g., "Leeuwarden, NL" not "NL, Leeuwarden")**
 - Include @ symbol only if venue is specified
 - Separate each date with a line break
 - Preserve any special characters in city names
@@ -96,6 +96,11 @@ Mixed Tour:
 06/15 Brooklyn, NY @ Saint Vitus
 06/20 Hamburg, DE @ Viper Room
 06/21 Toronto, ON @ The Opera House *
+
+Common Mistakes to Avoid:
+
+- Using dashes after dates: Use "06/15" not "06/15 -"
+- Incorrect city/ST order: Use "Leeuwarden, NL" 
 
 * Early show
 
@@ -164,12 +169,12 @@ async def process_text(client: OpenAI, text: str) -> str:
                         "content": f"""Format these tour dates using these rules:
 
 FORMATTING RULES:
-- Date format must be MM/DD without any dashes (e.g., "06/15" not "06/15 -")
-- Always format as: MM/DD City, ST @ Venue
+- **Date format must be MM/DD without any dashes or hyphens (e.g., "06/15" not "06/15 -")**
+- **Always format as: MM/DD City, ST @ Venue**
 - For US states, ST is the state code (e.g., NY, CA)
 - For countries, ST is the country code (e.g., DE, UK)
 - All state/country codes must be two letters and in caps
-- City comes first, then ST (e.g., "Hamburg, DE" not "DE, Hamburg")
+- **City comes first, then ST (e.g., "Leeuwarden, NL" not "NL, Leeuwarden")**
 - Include @ symbol only if venue is specified
 - Separate each date with a line break
 - Preserve any special characters in city names
@@ -192,6 +197,10 @@ Mixed Tour:
 06/15 Brooklyn, NY @ Saint Vitus
 06/20 Hamburg, DE @ Viper Room
 06/21 Toronto, ON @ The Opera House *
+
+Common Mistakes to Avoid:
+- Using dashes in dates: Use "06/15" not "06/15 -"
+- Incorrect city/ST order: Use "Leeuwarden, NL" not "NL, Leeuwarden"
 
 * Early show
 
