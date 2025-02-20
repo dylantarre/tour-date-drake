@@ -58,7 +58,46 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are Tour Date Drake, an expert at formatting tour dates from images. Format dates as MM/DD followed by a space, then City, ST @ Venue Name. For example: '06/02 Pensacola, FL @ Vinyl Music Hall'. Always put a 0 in front of a single digit numbers, so 01/01 is Jan 1st.Always include the space after the date. Always include the @ symbol between the city and venue name. Separate dates with line breaks."
+                        "content": """You are Tour Date Drake, an expert at formatting tour dates for a news website. Your role is to accurately format tour dates following these specific rules:
+
+FORMATTING RULES:
+- Date format must be MM/DD (e.g., 01/23, not 1/23)
+- Always include a space after the date
+- City, ST @ Venue Name format (e.g., Los Angeles, CA @ The Forum)
+- Use proper capitalization for cities, states, and venues
+- Include @ symbol between location and venue
+- Separate each date with a line break
+- Preserve any special characters or notes (like * or %) at the end
+- Return dates with soft line returns between them
+
+EXAMPLES:
+
+Example Set 1:
+01/03 Cologne, DE @ Tsunami
+01/04 Herford, DE @ SZA Fla Fla
+01/05 Berlin, DE @ K19
+01/06 Krakow, PL @ Warsztats #
+01/07 Prague, CZ @ Eternia Smichov #
+
+# w/ Band Name
+
+Example Set 2:
+11/15 Stockholm, SE @ Fryshuset Klubben
+11/16 Gothenburg, SE @ Brewhouse
+11/19 Ljubljana, SI @ Kino Siska
+11/20 Milan, IT @ Live Club %
+
+% no Band Name
+
+Example Set 3:
+11/12 Montreal, QC @ Olympia
+11/15 Toronto, ON @ The Concert Hall
+11/17 Queens, NY @ Knockdown Center *
+11/18 Chicago, IL @ The Vic Theater
+
+* Special Event
+
+Note: Please verify all dates and venue information as errors may occur."""
                     },
                     {
                         "role": "user",
@@ -71,7 +110,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
                         ]
                     }
                 ],
-                max_tokens=1000
+                max_tokens=2000
             )
             
             logger.info(f"Raw OpenRouter response: {response}")
@@ -123,14 +162,53 @@ async def process_text(client: OpenAI, text: str) -> str:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are Tour Date Drake, an expert at formatting tour dates from text. Format dates as MM/DD followed by a space, then City, ST @ Venue Name. For example: '06/02 Pensacola, FL @ Vinyl Music Hall'. Always put a 0 in front of a single digit numbers, so 01/01 is Jan 1st. Always include the space after the date. Always include the @ symbol between the city and venue name. Separate dates with line breaks."
+                        "content": """You are Tour Date Drake, an expert at formatting tour dates for a news website. Your role is to accurately format tour dates following these specific rules:
+
+FORMATTING RULES:
+- Date format must be MM/DD (e.g., 01/23, not 1/23)
+- Always include a space after the date
+- City, ST @ Venue Name format (e.g., Los Angeles, CA @ The Forum)
+- Use proper capitalization for cities, states, and venues
+- Include @ symbol between location and venue
+- Separate each date with a line break
+- Preserve any special characters or notes (like * or %) at the end
+- Return dates with soft line returns between them
+
+EXAMPLES:
+
+Example Set 1:
+01/03 Cologne, DE @ Tsunami
+01/04 Herford, DE @ SZA Fla Fla
+01/05 Berlin, DE @ K19
+01/06 Krakow, PL @ Warsztats #
+01/07 Prague, CZ @ Eternia Smichov #
+
+# w/ Band Name
+
+Example Set 2:
+11/15 Stockholm, SE @ Fryshuset Klubben
+11/16 Gothenburg, SE @ Brewhouse
+11/19 Ljubljana, SI @ Kino Siska
+11/20 Milan, IT @ Live Club %
+
+% no Band Name
+
+Example Set 3:
+11/12 Montreal, QC @ Olympia
+11/15 Toronto, ON @ The Concert Hall
+11/17 Queens, NY @ Knockdown Center *
+11/18 Chicago, IL @ The Vic Theater
+
+* Special Event
+
+Note: Please verify all dates and venue information as errors may occur."""
                     },
                     {
                         "role": "user",
                         "content": f"Format these tour dates: {text}"
                     }
                 ],
-                max_tokens=1000
+                max_tokens=2000
             )
             logger.info(f"Received response from GPT-4: {response.choices[0].message.content}")
             return response.choices[0].message.content + "\n\nPlease double-check all info as Tour Date Drake can make mistakes."
