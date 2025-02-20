@@ -58,53 +58,40 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
                 messages=[
                     {
                         "role": "system",
-                        "content": """You are Tour Date Drake, an expert at formatting tour dates for a news website. Your role is to accurately format tour dates following these specific rules:
-
-FORMATTING RULES:
-- Date format must be MM/DD (e.g., 01/23, not 1/23)
-- Always include a space after the date
-- City, ST @ Venue Name format (e.g., Los Angeles, CA @ The Forum)
-- Use proper capitalization for cities, states, and venues
-- Include @ symbol between location and venue
-- Separate each date with a line break
-- Preserve any special characters or notes (like * or %) at the end
-- Return dates with soft line returns between them
-
-EXAMPLES:
-
-Example Set 1:
-01/03 Cologne, DE @ Tsunami
-01/04 Herford, DE @ SZA Fla Fla
-01/05 Berlin, DE @ K19
-01/06 Krakow, PL @ Warsztats #
-01/07 Prague, CZ @ Eternia Smichov #
-
-# w/ Band Name
-
-Example Set 2:
-11/15 Stockholm, SE @ Fryshuset Klubben
-11/16 Gothenburg, SE @ Brewhouse
-11/19 Ljubljana, SI @ Kino Siska
-11/20 Milan, IT @ Live Club %
-
-% no Band Name
-
-Example Set 3:
-11/12 Montreal, QC @ Olympia
-11/15 Toronto, ON @ The Concert Hall
-11/17 Queens, NY @ Knockdown Center *
-11/18 Chicago, IL @ The Vic Theater
-
-* Special Event
-
-Note: Please verify all dates and venue information as errors may occur."""
+                        "content": "You are Tour Date Drake, a helpful assistant that formats tour dates."
                     },
                     {
                         "role": "user",
                         "content": [
                             {
                                 "type": "text",
-                                "text": "Please extract and format the tour dates from this image."
+                                "text": """Please extract and format all tour dates from this image using these rules:
+
+FORMATTING RULES:
+- Date format must be MM/DD (e.g., 01/23, not 1/23)
+- Always include a space after the date
+- Format as: City, ST @ Venue Name (e.g., Los Angeles, CA @ The Forum)
+- Use proper capitalization for cities, states, and venues
+- Include @ symbol between location and venue
+- Separate each date with a line break
+- Preserve any special characters or notes (like * or %) at the end
+- If you see any additional notes (like 'w/ Band Name'), include them after the dates
+
+EXAMPLE OUTPUTS:
+
+01/03 Cologne, DE @ Tsunami
+01/04 Herford, DE @ SZA Fla Fla
+01/05 Berlin, DE @ K19 *
+
+* VIP Experience Available
+
+11/15 Toronto, ON @ The Concert Hall #
+11/17 Queens, NY @ Knockdown Center #
+11/18 Chicago, IL @ The Vic Theater
+
+# w/ Special Guest
+
+Note: Always verify all dates and venue information as accuracy is crucial."""
                             },
                             image_content
                         ]
@@ -162,50 +149,39 @@ async def process_text(client: OpenAI, text: str) -> str:
                 messages=[
                     {
                         "role": "system",
-                        "content": """You are Tour Date Drake, an expert at formatting tour dates for a news website. Your role is to accurately format tour dates following these specific rules:
+                        "content": "You are Tour Date Drake, a helpful assistant that formats tour dates."
+                    },
+                    {
+                        "role": "user",
+                        "content": f"""Format these tour dates using these rules:
 
 FORMATTING RULES:
 - Date format must be MM/DD (e.g., 01/23, not 1/23)
 - Always include a space after the date
-- City, ST @ Venue Name format (e.g., Los Angeles, CA @ The Forum)
+- Format as: City, ST @ Venue Name (e.g., Los Angeles, CA @ The Forum)
 - Use proper capitalization for cities, states, and venues
 - Include @ symbol between location and venue
 - Separate each date with a line break
 - Preserve any special characters or notes (like * or %) at the end
-- Return dates with soft line returns between them
+- If you see any additional notes (like 'w/ Band Name'), include them after the dates
 
-EXAMPLES:
+EXAMPLE OUTPUTS:
 
-Example Set 1:
 01/03 Cologne, DE @ Tsunami
 01/04 Herford, DE @ SZA Fla Fla
-01/05 Berlin, DE @ K19
-01/06 Krakow, PL @ Warsztats #
-01/07 Prague, CZ @ Eternia Smichov #
+01/05 Berlin, DE @ K19 *
 
-# w/ Band Name
+* VIP Experience Available
 
-Example Set 2:
-11/15 Stockholm, SE @ Fryshuset Klubben
-11/16 Gothenburg, SE @ Brewhouse
-11/19 Ljubljana, SI @ Kino Siska
-11/20 Milan, IT @ Live Club %
-
-% no Band Name
-
-Example Set 3:
-11/12 Montreal, QC @ Olympia
-11/15 Toronto, ON @ The Concert Hall
-11/17 Queens, NY @ Knockdown Center *
+11/15 Toronto, ON @ The Concert Hall #
+11/17 Queens, NY @ Knockdown Center #
 11/18 Chicago, IL @ The Vic Theater
 
-* Special Event
+# w/ Special Guest
 
-Note: Please verify all dates and venue information as errors may occur."""
-                    },
-                    {
-                        "role": "user",
-                        "content": f"Format these tour dates: {text}"
+Note: Always verify all dates and venue information as accuracy is crucial.
+
+Here are the dates to format: {text}"""
                     }
                 ],
                 max_tokens=2000
