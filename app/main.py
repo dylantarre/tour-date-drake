@@ -43,7 +43,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"Processing image with o1 (attempt {attempt + 1}/{max_retries})")
+            logger.info(f"Processing image with model 'o1' (attempt {attempt + 1}/{max_retries})")
             
             # For URLs, send the URL directly. For uploaded files, use the data URL as is
             image_content = {
@@ -113,7 +113,7 @@ Note: Always verify all dates and venue information as accuracy is crucial."""
                 max_tokens=2000
             )
             
-            logger.info(f"Raw OpenRouter response: {response}")
+            logger.info(f"Received response from model 'o1': {response}")
             
             if hasattr(response, 'error'):
                 error_msg = response.error.get('message', 'Unknown error')
