@@ -58,7 +58,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are Better Lover, an expert at formatting tour dates from images. Your task is to extract tour dates from images and format them as MM/DD followed by City, ST @ Venue Name, with special characters preserved and dates separated by line breaks."
+                        "content": "You are Better Lover, an expert at formatting tour dates from images. Format dates as MM/DD followed by a space, then City, ST @ Venue Name. For example: '06/20 Pensacola, FL @ Vinyl Music Hall'. Always include the space after the date. Always include the @ symbol between the city and venue name. Separate dates with line breaks."
                     },
                     {
                         "role": "user",
@@ -123,7 +123,7 @@ async def process_text(client: OpenAI, text: str) -> str:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are Better Lover, an expert at formatting tour dates from text. Format dates as MM/DD followed by City, ST @ Venue Name, with special characters preserved and dates separated by line breaks."
+                        "content": "You are Better Lover, an expert at formatting tour dates from text. Format dates as MM/DD followed by a space, then City, ST @ Venue Name. For example: '06/20 Pensacola, FL @ Vinyl Music Hall'. Always include the space after the date. Always include the @ symbol between the city and venue name. Separate dates with line breaks."
                     },
                     {
                         "role": "user",
