@@ -68,34 +68,34 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
                                 "text": """Please extract and format all tour dates from this image using these rules:
 
 FORMATTING RULES:
-- Date format must be MM/DD (e.g., 01/23, not 1/23)
-- Always include a space after the date
-- Format as: City, COUNTRY @ Venue (if venue is known)
-- If no venue is specified, format as: City, COUNTRY
-- Use proper capitalization for cities
-- COUNTRY should always use two letters (e.g., DE, UK, NL, etc.)
-- COUNTRY codes should be in caps (DE, UK, NL, etc.)
+- Date format must be MM/DD without any dashes (e.g., "06/15" not "06/15 -")
+- Always format as: MM/DD City, ST @ Venue
+- For US states, ST is the state code (e.g., NY, CA)
+- For countries, ST is the country code (e.g., DE, UK)
+- All state/country codes must be two letters and in caps
+- City comes first, then ST (e.g., "Hamburg, DE" not "DE, Hamburg")
 - Include @ symbol only if venue is specified
 - Separate each date with a line break
 - Preserve any special characters in city names
-- Remove any dashes or extra formatting from the original text and use the preferred format
+- Remove any dashes, commas, or extra formatting from the original text
+- For long venue names, keep them concise if possible
 
 EXAMPLE OUTPUTS:
 
-With venues:
-06/15 Hamburg, DE @ Viper Room
-06/16 Berlin, DE @ SO36
-06/17 Wrocław, PL @ Klub Pogłos
+US Shows:
+06/15 Brooklyn, NY @ Saint Vitus
+06/16 Philadelphia, PA @ First Unitarian Church
+06/17 Boston, MA @ The Middle East
 
-Without venues:
-06/15 Hamburg, DE
-06/16 Berlin, DE
-06/17 Wrocław, PL
+European Shows:
+06/20 Hamburg, DE @ Viper Room
+06/21 Berlin, DE @ SO36
+06/22 Wrocław, PL @ Klub Pogłos
 
-Mixed format with notes:
-06/15 Hamburg, DE @ Viper Room
-06/16 Berlin, DE
-06/17 Wrocław, PL @ Klub Pogłos *
+Mixed Tour:
+06/15 Brooklyn, NY @ Saint Vitus
+06/20 Hamburg, DE @ Viper Room
+06/21 Toronto, ON @ The Opera House *
 
 * Early show
 
@@ -164,34 +164,34 @@ async def process_text(client: OpenAI, text: str) -> str:
                         "content": f"""Format these tour dates using these rules:
 
 FORMATTING RULES:
-- Date format must be MM/DD (e.g., 01/23, not 1/23)
-- Always include a space after the date
-- Format as: City, COUNTRY @ Venue (if venue is known)
-- If no venue is specified, format as: City, COUNTRY
-- Use proper capitalization for cities
-- COUNTRY should always use two letters (e.g., DE, UK, NL, etc.)
-- COUNTRY codes should be in caps (DE, UK, NL, etc.)
+- Date format must be MM/DD without any dashes (e.g., "06/15" not "06/15 -")
+- Always format as: MM/DD City, ST @ Venue
+- For US states, ST is the state code (e.g., NY, CA)
+- For countries, ST is the country code (e.g., DE, UK)
+- All state/country codes must be two letters and in caps
+- City comes first, then ST (e.g., "Hamburg, DE" not "DE, Hamburg")
 - Include @ symbol only if venue is specified
 - Separate each date with a line break
 - Preserve any special characters in city names
-- Remove any dashes or extra formatting from the original text and use the preferred format
+- Remove any dashes, commas, or extra formatting from the original text
+- For long venue names, keep them concise if possible
 
 EXAMPLE OUTPUTS:
 
-With venues:
-06/15 Hamburg, DE @ Viper Room
-06/16 Berlin, DE @ SO36
-06/17 Wrocław, PL @ Klub Pogłos
+US Shows:
+06/15 Brooklyn, NY @ Saint Vitus
+06/16 Philadelphia, PA @ First Unitarian Church
+06/17 Boston, MA @ The Middle East
 
-Without venues:
-06/15 Hamburg, DE
-06/16 Berlin, DE
-06/17 Wrocław, PL
+European Shows:
+06/20 Hamburg, DE @ Viper Room
+06/21 Berlin, DE @ SO36
+06/22 Wrocław, PL @ Klub Pogłos
 
-Mixed format with notes:
-06/15 Hamburg, DE @ Viper Room
-06/16 Berlin, DE
-06/17 Wrocław, PL @ Klub Pogłos *
+Mixed Tour:
+06/15 Brooklyn, NY @ Saint Vitus
+06/20 Hamburg, DE @ Viper Room
+06/21 Toronto, ON @ The Opera House *
 
 * Early show
 
