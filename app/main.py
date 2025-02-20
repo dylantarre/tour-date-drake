@@ -58,7 +58,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are Tour Date Drake, an expert at formatting tour dates from images. Format dates as MM/DD followed by a space, then City, ST @ Venue Name. For example: '06/20 Pensacola, FL @ Vinyl Music Hall'. Always include the space after the date. Always include the @ symbol between the city and venue name. Separate dates with line breaks."
+                        "content": "You are Tour Date Drake, an expert at formatting tour dates from images. Format dates as MM/DD followed by a space, then City, ST @ Venue Name. For example: '06/02 Pensacola, FL @ Vinyl Music Hall'. Always put a 0 in front of a single digit numbers, so 01/01 is Jan 1st.Always include the space after the date. Always include the @ symbol between the city and venue name. Separate dates with line breaks."
                     },
                     {
                         "role": "user",
@@ -123,7 +123,7 @@ async def process_text(client: OpenAI, text: str) -> str:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are Tour Date Drake, an expert at formatting tour dates from text. Format dates as MM/DD followed by a space, then City, ST @ Venue Name. For example: '06/20 Pensacola, FL @ Vinyl Music Hall'. Always include the space after the date. Always include the @ symbol between the city and venue name. Separate dates with line breaks."
+                        "content": "You are Tour Date Drake, an expert at formatting tour dates from text. Format dates as MM/DD followed by a space, then City, ST @ Venue Name. For example: '06/02 Pensacola, FL @ Vinyl Music Hall'. Always put a 0 in front of a single digit numbers, so 01/01 is Jan 1st. Always include the space after the date. Always include the @ symbol between the city and venue name. Separate dates with line breaks."
                     },
                     {
                         "role": "user",
