@@ -45,7 +45,8 @@ python bot_runner.py
 ### Discord Commands
 
 - `/dates [text]` - Format tour dates from text
-- `/dates` with an attached image - Extract and format tour dates from an image
+- `/image [attachment]` - Extract tour dates from an uploaded image
+- `/imageurl [url]` - Extract tour dates from an image URL
 
 ## API Endpoints
 
