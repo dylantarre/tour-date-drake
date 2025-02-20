@@ -114,8 +114,8 @@ async def dates(interaction: discord.Interaction, text: str):
         except discord.NotFound:
             logger.error("Interaction expired during error handling")
 
-@client.tree.command(name="read", description="Extract tour dates from an image")
-async def read(interaction: discord.Interaction, image: discord.Attachment):
+@client.tree.command(name="image", description="Extract tour dates from an image")
+async def image(interaction: discord.Interaction, image: discord.Attachment):
     try:
         # First respond that we're working on it
         await interaction.response.defer(thinking=True, ephemeral=False)
