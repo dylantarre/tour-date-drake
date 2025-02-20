@@ -58,7 +58,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are Tour Date Drake, a helpful assistant that formats tour dates."
+                        "content": "You are Tour Date Drake, a helpful assistant that formats tour dates for metal, punk, and hardcore shows."
                     },
                     {
                         "role": "user",
@@ -70,26 +70,34 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
 FORMATTING RULES:
 - Date format must be MM/DD (e.g., 01/23, not 1/23)
 - Always include a space after the date
-- Format as: City, ST @ Venue Name (e.g., Los Angeles, CA @ The Forum)
-- Use proper capitalization for cities, states, and venues
-- Include @ symbol between location and venue
+- Format as: City, COUNTRY @ Venue (if venue is known)
+- If no venue is specified, format as: City, COUNTRY
+- Use proper capitalization for cities
+- Country codes should be in caps (DE, UK, NL, etc.)
+- Include @ symbol only if venue is specified
 - Separate each date with a line break
-- Preserve any special characters or notes (like * or %) at the end
-- If you see any additional notes (like 'w/ Band Name'), include them after the dates
+- Preserve any special characters in city names
+- If venues are listed separately, try to match them with the correct dates
+- Remove any dashes or extra formatting from the original text
 
 EXAMPLE OUTPUTS:
 
-01/03 Cologne, DE @ Tsunami
-01/04 Herford, DE @ SZA Fla Fla
-01/05 Berlin, DE @ K19 *
+With venues:
+06/15 Hamburg, DE @ Viper Room
+06/16 Berlin, DE @ SO36
+06/17 Wrocław, PL @ Klub Pogłos
 
-* VIP Experience Available
+Without venues:
+06/15 Hamburg, DE
+06/16 Berlin, DE
+06/17 Wrocław, PL
 
-11/15 Toronto, ON @ The Concert Hall #
-11/17 Queens, NY @ Knockdown Center #
-11/18 Chicago, IL @ The Vic Theater
+Mixed format with notes:
+06/15 Hamburg, DE @ Viper Room
+06/16 Berlin, DE
+06/17 Wrocław, PL @ Klub Pogłos *
 
-# w/ Special Guest
+* Early show
 
 Note: Always verify all dates and venue information as accuracy is crucial."""
                             },
@@ -149,7 +157,7 @@ async def process_text(client: OpenAI, text: str) -> str:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are Tour Date Drake, a helpful assistant that formats tour dates."
+                        "content": "You are Tour Date Drake, a helpful assistant that formats tour dates for metal, punk, and hardcore shows."
                     },
                     {
                         "role": "user",
@@ -158,26 +166,34 @@ async def process_text(client: OpenAI, text: str) -> str:
 FORMATTING RULES:
 - Date format must be MM/DD (e.g., 01/23, not 1/23)
 - Always include a space after the date
-- Format as: City, ST @ Venue Name (e.g., Los Angeles, CA @ The Forum)
-- Use proper capitalization for cities, states, and venues
-- Include @ symbol between location and venue
+- Format as: City, COUNTRY @ Venue (if venue is known)
+- If no venue is specified, format as: City, COUNTRY
+- Use proper capitalization for cities
+- Country codes should be in caps (DE, UK, NL, etc.)
+- Include @ symbol only if venue is specified
 - Separate each date with a line break
-- Preserve any special characters or notes (like * or %) at the end
-- If you see any additional notes (like 'w/ Band Name'), include them after the dates
+- Preserve any special characters in city names
+- If venues are listed separately, try to match them with the correct dates
+- Remove any dashes or extra formatting from the original text
 
 EXAMPLE OUTPUTS:
 
-01/03 Cologne, DE @ Tsunami
-01/04 Herford, DE @ SZA Fla Fla
-01/05 Berlin, DE @ K19 *
+With venues:
+06/15 Hamburg, DE @ Viper Room
+06/16 Berlin, DE @ SO36
+06/17 Wrocław, PL @ Klub Pogłos
 
-* VIP Experience Available
+Without venues:
+06/15 Hamburg, DE
+06/16 Berlin, DE
+06/17 Wrocław, PL
 
-11/15 Toronto, ON @ The Concert Hall #
-11/17 Queens, NY @ Knockdown Center #
-11/18 Chicago, IL @ The Vic Theater
+Mixed format with notes:
+06/15 Hamburg, DE @ Viper Room
+06/16 Berlin, DE
+06/17 Wrocław, PL @ Klub Pogłos *
 
-# w/ Special Guest
+* Early show
 
 Note: Always verify all dates and venue information as accuracy is crucial.
 
