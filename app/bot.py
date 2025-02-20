@@ -5,6 +5,7 @@ import aiohttp
 import logging
 from dotenv import load_dotenv
 import asyncio
+from io import BytesIO
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -158,9 +159,13 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
             # Split long messages
             chunks = split_message(formatted_dates)
             
-            # Send first chunk as initial response
+            # Create a discord.File from the image data
+            image_io = BytesIO(image_data)
+            image_file = discord.File(fp=image_io, filename=image.filename)
+            
+            # Send first chunk as initial response with the image
             try:
-                await interaction.followup.send(f"```\n{chunks[0]}\n```")
+                await interaction.followup.send(f"```\n{chunks[0]}\n```", file=image_file)
             except discord.NotFound:
                 logger.error("Initial interaction expired, creating new message")
                 return
