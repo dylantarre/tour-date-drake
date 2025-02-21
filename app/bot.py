@@ -15,7 +15,10 @@ load_dotenv()
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 API_URL = os.getenv("API_URL", "http://api:4343")
-MAX_DISCORD_LENGTH = 1990  # Leave some room for the code block markers
+MAX_DISCORD_LENGTH = 2000
+CODE_BLOCK_OVERHEAD = 7  # Length of "```\n" + "\n```"
+CONTINUED_OVERHEAD = 13  # Length of "(continued...)\n"
+EFFECTIVE_LENGTH = MAX_DISCORD_LENGTH - CODE_BLOCK_OVERHEAD  # Maximum length for the content inside code blocks
 
 def split_message(message: str) -> list[str]:
     """Split a message into chunks that fit within Discord's character limit."""
@@ -23,8 +26,11 @@ def split_message(message: str) -> list[str]:
     current_chunk = ""
     
     for line in message.split('\n'):
+        # Calculate the effective length including the overhead for continued chunks
+        effective_max = EFFECTIVE_LENGTH - (CONTINUED_OVERHEAD if chunks else 0)
+        
         # If adding this line would exceed the limit, start a new chunk
-        if len(current_chunk) + len(line) + 1 > MAX_DISCORD_LENGTH:
+        if len(current_chunk) + len(line) + 1 > effective_max:
             if current_chunk:
                 chunks.append(current_chunk.strip())
             current_chunk = line
@@ -165,7 +171,8 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
             
             # Send first chunk as initial response with the image
             try:
-                await interaction.followup.send(f"```\n{chunks[0]}\n```\n\nPlease double-check all info as Tour Date Drake can make mistakes.", file=image_file)
+                await interaction.followup.send(file=image_file)
+                await interaction.followup.send(f"```\n{chunks[0]}\n```\n\nPlease double-check all info as Tour Date Drake can make mistakes.")
             except discord.NotFound:
                 logger.error("Initial interaction expired, creating new message")
                 return
@@ -252,7 +259,8 @@ async def imageurl(interaction: discord.Interaction, url: str):
             
             # Send first chunk as initial response with the image
             try:
-                await interaction.followup.send(f"```\n{chunks[0]}\n```\n\nPlease double-check all info as Tour Date Drake can make mistakes.", file=image_file)
+                await interaction.followup.send(file=image_file)
+                await interaction.followup.send(f"```\n{chunks[0]}\n```\n\nPlease double-check all info as Tour Date Drake can make mistakes.")
             except discord.NotFound:
                 logger.error("Initial interaction expired, creating new message")
                 return
