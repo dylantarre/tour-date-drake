@@ -71,6 +71,7 @@ FORMATTING RULES:
 - **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15" not "06/15 -")**
 - **ABSOLUTELY NO DASHES in the final output**
 - **Always format as: MM/DD City, ST @ Venue (if venue is known)**
+- City and Venue names should have normal capitalization (e.g., "Hamburg" not "HAMBURG")
 - If venues are listed separately, match them to the correct dates. If a venue cannot be matched, omit it.
 - For US states, ST is the state code (e.g., NY, CA)
 - For countries, ST is the country code (e.g., DE, UK)
@@ -173,6 +174,7 @@ FORMATTING RULES:
 - **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15" not "06/15 -")**
 - **ABSOLUTELY NO DASHES in the final output**
 - **Always format as: MM/DD City, ST @ Venue (if venue is known)**
+- City and Venue names should have normal capitalization (e.g., "Hamburg" not "HAMBURG")
 - If venues are listed separately, match them to the correct dates. If a venue cannot be matched, omit it.
 - For US states, ST is the state code (e.g., NY, CA)
 - For countries, ST is the country code (e.g., DE, UK)
