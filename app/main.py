@@ -142,7 +142,7 @@ Note: Always verify all dates and venue information as accuracy is crucial."""
                 raise HTTPException(status_code=500, detail="No content in AI service response")
                 
             logger.info(f"Successfully extracted content: {content}")
-            return content + "\n\nPlease double-check all info as Tour Date Drake can make mistakes."
+            return content
             
         except Exception as e:
             if attempt < max_retries - 1:
@@ -217,7 +217,8 @@ Here are the dates to format: {text}"""
                 max_tokens=2000
             )
             logger.info(f"Received response from model 'google/gemini-2.0-pro-exp-02-05:free': {response.choices[0].message.content}")
-            return response.choices[0].message.content + "\n\nPlease double-check all info as Tour Date Drake can make mistakes."
+            return response.choices[0].message.content
+            
         except Exception as e:
             if attempt < max_retries - 1:
                 logger.warning(f"Attempt {attempt + 1} failed, retrying in {retry_delay} seconds: {str(e)}")

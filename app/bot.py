@@ -88,7 +88,7 @@ async def dates(interaction: discord.Interaction, text: str):
             
             # Send first chunk as initial response
             try:
-                await interaction.followup.send(f"```\n{chunks[0]}\n```")
+                await interaction.followup.send(f"```\n{chunks[0]}\n```\n\nPlease double-check all info as Tour Date Drake can make mistakes.")
             except discord.NotFound:
                 logger.error("Initial interaction expired, creating new message")
                 return
@@ -165,7 +165,7 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
             
             # Send first chunk as initial response with the image
             try:
-                await interaction.followup.send(f"```\n{chunks[0]}\n```", file=image_file)
+                await interaction.followup.send(f"```\n{chunks[0]}\n```\n\nPlease double-check all info as Tour Date Drake can make mistakes.", file=image_file)
             except discord.NotFound:
                 logger.error("Initial interaction expired, creating new message")
                 return
@@ -252,7 +252,7 @@ async def imageurl(interaction: discord.Interaction, url: str):
             
             # Send first chunk as initial response with the image
             try:
-                await interaction.followup.send(f"```\n{chunks[0]}\n```", file=image_file)
+                await interaction.followup.send(f"```\n{chunks[0]}\n```\n\nPlease double-check all info as Tour Date Drake can make mistakes.", file=image_file)
             except discord.NotFound:
                 logger.error("Initial interaction expired, creating new message")
                 return
