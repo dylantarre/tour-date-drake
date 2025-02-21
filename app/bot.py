@@ -160,6 +160,12 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
                 logger.info(f"Parsed API response: {result}")
 
             formatted_dates = result.get("formatted_dates", "Error: No dates found")
+            if not formatted_dates or formatted_dates == "Error: No dates found":
+                logger.warning("No dates found in the image")
+                await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=image.filename))
+                await interaction.followup.send("I couldn't find any tour dates in this image. Please make sure the image contains clear tour date information.")
+                return
+                
             logger.info(f"Sending formatted response to Discord: {formatted_dates}")
             
             # Split long messages
@@ -169,33 +175,32 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
             image_io = BytesIO(image_data)
             image_file = discord.File(fp=image_io, filename=image.filename)
             
-            # Send first chunk as initial response with the image
             try:
+                # Send first chunk as initial response with the image
                 await interaction.followup.send(file=image_file)
                 await interaction.followup.send(f"```\n{chunks[0]}\n```\n\nPlease double-check all info as Tour Date Drake can make mistakes.")
-            except discord.NotFound:
-                logger.error("Initial interaction expired, creating new message")
-                return
                 
-            # Send remaining chunks as follow-ups
-            if len(chunks) > 1:
-                try:
+                # Send remaining chunks as follow-ups
+                if len(chunks) > 1:
                     for chunk in chunks[1:]:
                         await interaction.followup.send(f"```\n(continued...)\n{chunk}\n```")
-                except discord.NotFound:
-                    logger.error("Follow-up interaction expired")
-                    return
-
+            except discord.NotFound:
+                logger.error("Interaction expired")
+                return
+            finally:
+                # Clean up the BytesIO buffer
+                image_io.close()
+                
     except asyncio.TimeoutError:
         logger.error("Request timed out")
         try:
-            await interaction.followup.send("Error: Request timed out. Please try again.")
+            await interaction.followup.send("Sorry, the request took too long to process. Please try again with a smaller image or check your internet connection.")
         except discord.NotFound:
             logger.error("Interaction expired during timeout")
     except Exception as e:
         logger.error(f"Error processing request: {str(e)}", exc_info=True)
         try:
-            await interaction.followup.send(f"Error: {str(e)}")
+            await interaction.followup.send("Sorry, something went wrong while processing your request. Please try again later.")
         except discord.NotFound:
             logger.error("Interaction expired during error handling")
 
@@ -248,6 +253,12 @@ async def imageurl(interaction: discord.Interaction, url: str):
                     logger.info(f"Parsed API response: {result}")
 
             formatted_dates = result.get("formatted_dates", "Error: No dates found")
+            if not formatted_dates or formatted_dates == "Error: No dates found":
+                logger.warning("No dates found in the image")
+                await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=filename))
+                await interaction.followup.send("I couldn't find any tour dates in this image. Please make sure the image contains clear tour date information.")
+                return
+                
             logger.info(f"Sending formatted response to Discord: {formatted_dates}")
             
             # Split long messages
@@ -257,33 +268,32 @@ async def imageurl(interaction: discord.Interaction, url: str):
             image_io = BytesIO(image_data)
             image_file = discord.File(fp=image_io, filename=filename)
             
-            # Send first chunk as initial response with the image
             try:
+                # Send first chunk as initial response with the image
                 await interaction.followup.send(file=image_file)
                 await interaction.followup.send(f"```\n{chunks[0]}\n```\n\nPlease double-check all info as Tour Date Drake can make mistakes.")
-            except discord.NotFound:
-                logger.error("Initial interaction expired, creating new message")
-                return
                 
-            # Send remaining chunks as follow-ups
-            if len(chunks) > 1:
-                try:
+                # Send remaining chunks as follow-ups
+                if len(chunks) > 1:
                     for chunk in chunks[1:]:
                         await interaction.followup.send(f"```\n(continued...)\n{chunk}\n```")
-                except discord.NotFound:
-                    logger.error("Follow-up interaction expired")
-                    return
-
+            except discord.NotFound:
+                logger.error("Interaction expired")
+                return
+            finally:
+                # Clean up the BytesIO buffer
+                image_io.close()
+                
     except asyncio.TimeoutError:
         logger.error("Request timed out")
         try:
-            await interaction.followup.send("Error: Request timed out. Please try again.")
+            await interaction.followup.send("Sorry, the request took too long to process. Please try again with a smaller image or check your internet connection.")
         except discord.NotFound:
             logger.error("Interaction expired during timeout")
     except Exception as e:
         logger.error(f"Error processing request: {str(e)}", exc_info=True)
         try:
-            await interaction.followup.send(f"Error: {str(e)}")
+            await interaction.followup.send("Sorry, something went wrong while processing your request. Please try again later.")
         except discord.NotFound:
             logger.error("Interaction expired during error handling")
 
