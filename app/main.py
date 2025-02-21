@@ -43,7 +43,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"Processing image with model 'gemini-2.0-pro-exp-02-05' (attempt {attempt + 1}/{max_retries})")
+            logger.info(f"Processing image with model 'google/gemini-2.0-pro-exp-02-05:free' (attempt {attempt + 1}/{max_retries})")
             
             # For URLs, send the URL directly. For uploaded files, use the data URL as is
             image_content = {
@@ -54,7 +54,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
             }
             
             response = client.chat.completions.create(
-                model="gemini-2.0-pro-exp-02-05",
+                model="google/gemini-2.0-pro-exp-02-05:free",
                 messages=[
                     {
                         "role": "system",
@@ -114,7 +114,7 @@ Note: Always verify all dates and venue information as accuracy is crucial."""
                 max_tokens=2000
             )
             
-            logger.info(f"Received response from model 'gemini-2.0-pro-exp-02-05': {response}")
+            logger.info(f"Received response from model 'google/gemini-2.0-pro-exp-02-05:free': {response}")
             
             if hasattr(response, 'error'):
                 error_msg = response.error.get('message', 'Unknown error')
@@ -157,9 +157,9 @@ async def process_text(client: OpenAI, text: str) -> str:
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"Processing text with gemini-2.0-pro-exp-02-05(attempt {attempt + 1}/{max_retries})")
+            logger.info(f"Processing text with google/gemini-2.0-pro-exp-02-05:free(attempt {attempt + 1}/{max_retries})")
             response = client.chat.completions.create(
-                model="gemini-2.0-pro-exp-02-05",
+                model="google/gemini-2.0-pro-exp-02-05:free",
                 messages=[
                     {
                         "role": "system",
@@ -214,7 +214,7 @@ Here are the dates to format: {text}"""
                 ],
                 max_tokens=2000
             )
-            logger.info(f"Received response from model 'gemini-2.0-pro-exp-02-05': {response.choices[0].message.content}")
+            logger.info(f"Received response from model 'google/gemini-2.0-pro-exp-02-05:free': {response.choices[0].message.content}")
             return response.choices[0].message.content + "\n\nPlease double-check all info as Tour Date Drake can make mistakes."
         except Exception as e:
             if attempt < max_retries - 1:
