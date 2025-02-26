@@ -68,7 +68,8 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
                                 "text": """Please extract and format all tour dates from this image using these rules:
 
 FORMATTING RULES:
-- **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15" not "06/15 -")**
+- **ALWAYS use American date format MM/DD for ALL dates (even for European/international tours)**
+- **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15 City, ST" not "06/15 - City, ST")**
 - **ABSOLUTELY NO DASHES in the final output**
 - **Always format as: MM/DD City, ST @ Venue (if venue is known)**
 - City and Venue names should have normal capitalization (e.g., "Hamburg" not "HAMBURG")
@@ -81,6 +82,8 @@ FORMATTING RULES:
 - Preserve any special characters in city names
 - Remove any dashes, commas, or extra formatting from the original text
 - For long venue names, keep them concise if possible
+- **IMPORTANT: Preserve all informational notes, supporting act info, and venue details like "(NOTE)" or "* Supporting Band"**
+- If there are notes at the bottom of the list (like "* Supporting Band"), include them at the end of the output
 
 EXAMPLE OUTPUTS:
 
@@ -89,22 +92,32 @@ US Shows:
 06/16 Philadelphia, PA @ First Unitarian Church
 06/17 Boston, MA @ The Middle East
 
-European Shows:
+European Shows (still using MM/DD format):
 06/20 Hamburg, DE @ Viper Room
 06/21 Berlin, DE @ SO36
 06/22 Wrocław, PL @ Klub Pogłos
 
-Mixed Tour:
+Mixed Tour with Notes:
+03/14 Austin, TX @ Central Presbyterian Church (SXSW)
+05/31 Raleigh, NC @ The Ritz *
+06/02 Cleveland, OH @ Globe Iron *
+06/03 Toronto, ON @ HISTORY *
 06/15 Brooklyn, NY @ Saint Vitus
 06/20 Hamburg, DE @ Viper Room
-06/21 Toronto, ON @ The Opera House *
-06/23 Karlsruhe, DE @ Die Stadtmitte
+
+* Supporting Panchiko
+
+Festival Appearances:
+06/13 London, UK @ Lido Festival
+06/14 Manchester, UK @ Outbreak Festival
+06/19 Lisbon, PT @ Kalorama Festival
+06/20 Madrid, ES @ Kalorama Festival
 
 Common Mistakes to Avoid:
 - Using dashes in dates: Use "06/15" not "06/15 -"
+- Using European date format: Use "06/15" (June 15) not "15/06"
 - Incorrect city/ST order: Use "Leeuwarden, NL" not "NL, Leeuwarden"
-
-* Early show
+- Removing important context: Keep venue details like "(SXSW)" and supporting act info
 
 Note: Always verify all dates and venue information as accuracy is crucial."""
                             },
@@ -171,7 +184,8 @@ async def process_text(client: OpenAI, text: str) -> str:
                         "content": f"""Please extract and format all tour dates from this text using these rules:
 
 FORMATTING RULES:
-- **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15" not "06/15 -")**
+- **ALWAYS use American date format MM/DD for ALL dates (even for European/international tours)**
+- **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15 City, ST" not "06/15 - City, ST")**
 - **ABSOLUTELY NO DASHES in the final output**
 - **Always format as: MM/DD City, ST @ Venue (if venue is known)**
 - City and Venue names should have normal capitalization (e.g., "Hamburg" not "HAMBURG")
@@ -184,6 +198,8 @@ FORMATTING RULES:
 - Preserve any special characters in city names
 - Remove any dashes, commas, or extra formatting from the original text
 - For long venue names, keep them concise if possible
+- **IMPORTANT: Preserve all informational notes, supporting act info, and venue details like "(SXSW)" or "* Supporting Band"**
+- If there are notes at the bottom of the list (like "* Supporting Band"), include them at the end of the output
 
 EXAMPLE OUTPUTS:
 
@@ -192,22 +208,32 @@ US Shows:
 06/16 Philadelphia, PA @ First Unitarian Church
 06/17 Boston, MA @ The Middle East
 
-European Shows:
+European Shows (still using MM/DD format):
 06/20 Hamburg, DE @ Viper Room
 06/21 Berlin, DE @ SO36
 06/22 Wrocław, PL @ Klub Pogłos
 
-Mixed Tour:
+Mixed Tour with Notes:
+03/14 Austin, TX @ Central Presbyterian Church (SXSW)
+05/31 Raleigh, NC @ The Ritz *
+06/02 Cleveland, OH @ Globe Iron *
+06/03 Toronto, ON @ HISTORY *
 06/15 Brooklyn, NY @ Saint Vitus
 06/20 Hamburg, DE @ Viper Room
-06/21 Toronto, ON @ The Opera House *
-06/23 Karlsruhe, DE @ Die Stadtmitte
+
+* Supporting Panchiko
+
+Festival Appearances:
+06/13 London, UK @ Lido Festival
+06/14 Manchester, UK @ Outbreak Festival
+06/19 Lisbon, PT @ Kalorama Festival
+06/20 Madrid, ES @ Kalorama Festival
 
 Common Mistakes to Avoid:
 - Using dashes in dates: Use "06/15" not "06/15 -"
+- Using European date format: Use "06/15" (June 15) not "15/06"
 - Incorrect city/ST order: Use "Leeuwarden, NL" not "NL, Leeuwarden"
-
-* Early show
+- Removing important context: Keep venue details like "(SXSW)" and supporting act info
 
 Note: Always verify all dates and venue information as accuracy is crucial.
 
