@@ -216,8 +216,25 @@ Here are the dates to format: {text}"""
                 ],
                 max_tokens=2000
             )
-            logger.info(f"Received response from model 'google/gemini-2.0-pro-exp-02-05:free': {response.choices[0].message.content}")
-            return response.choices[0].message.content
+            
+            logger.info(f"Raw response from model: {response}")
+            
+            # Check if response is valid
+            if not hasattr(response, 'choices') or not response.choices:
+                logger.error(f"No choices in response. Response type: {type(response)}")
+                raise ValueError("Invalid response format from AI service")
+                
+            if not response.choices[0] or not hasattr(response.choices[0], 'message'):
+                logger.error(f"Invalid choice format. First choice: {response.choices[0]}")
+                raise ValueError("Invalid response format from AI service")
+                
+            content = response.choices[0].message.content
+            if not content:
+                logger.error("Empty content in message")
+                raise ValueError("No content in AI service response")
+                
+            logger.info(f"Received response from model 'google/gemini-2.0-pro-exp-02-05:free': {content}")
+            return content
             
         except Exception as e:
             if attempt < max_retries - 1:
