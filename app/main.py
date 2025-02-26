@@ -38,41 +38,6 @@ def init_openai_client():
         timeout=120.0  # Increased to 120 seconds
     )
 
-def fix_date_formats(text: str) -> str:
-    """
-    Ensure all dates are in MM/DD format by checking and converting any dates that appear to be in DD/MM format.
-    This is a safety check to catch any dates the model might have missed converting.
-    """
-    # Regular expression to find date patterns at the beginning of lines
-    date_pattern = re.compile(r'^(\d{2})/(\d{2})', re.MULTILINE)
-    
-    def convert_if_needed(match):
-        day = int(match.group(1))
-        month = int(match.group(2))
-        
-        # Heuristic: If day > 12 and month <= 12, it's likely in DD/MM format and needs conversion
-        if day > 12 and month <= 12:
-            logger.info(f"Converting date from DD/MM to MM/DD: {match.group(1)}/{match.group(2)} -> {match.group(2)}/{match.group(1)}")
-            return f"{month:02d}/{day:02d}"
-        
-        # Contextual check: If the text suggests a European context, apply stricter conversion
-        # Example: If the text contains known European city names or venues
-        european_cities = ["Berlin", "Paris", "London", "Amsterdam"]
-        if any(city in text for city in european_cities) and day <= 12 and month > 12:
-            logger.info(f"Contextual conversion from DD/MM to MM/DD: {match.group(1)}/{match.group(2)} -> {match.group(2)}/{match.group(1)}")
-            return f"{month:02d}/{day:02d}"
-        
-        return f"{match.group(1)}/{match.group(2)}"
-    
-    # Apply the conversion
-    corrected_text = date_pattern.sub(convert_if_needed, text)
-    
-    # Log if any changes were made
-    if corrected_text != text:
-        logger.info("Date formats were corrected in the output")
-    
-    return corrected_text
-
 async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -> str:
     max_retries = 3
     retry_delay = 5  # seconds
@@ -105,7 +70,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
 
 FORMATTING RULES:
 - **ALWAYS use American date format MM/DD for ALL dates (even for European/international tours)**
-- **IMPORTANT: Convert any European format dates (DD/MM) to American format (MM/DD)**
+- **IMPORTANT: Convert any European format dates (DD/MM) to American format (MM/DD) in the output**
 - **For example: "07/03" in European format should be converted to "03/07" in American format (March 7th)**
 - **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15 City, ST" not "06/15 - City, ST")**
 - **ABSOLUTELY NO DASHES in the final output**
@@ -156,7 +121,7 @@ Common Mistakes to Avoid:
 - Using European date format: Use "06/15" (June 15) not "15/06"
 - Incorrect city/ST order: Use "Leeuwarden, NL" not "NL, Leeuwarden"
 - Removing important context: Keep venue details like "(SXSW)" and supporting act info
-
+- Remember to convert any European format dates (DD/MM) to American format (MM/DD) in the output
 Note: Always verify all dates and venue information as accuracy is crucial."""
                             },
                             image_content
@@ -194,9 +159,6 @@ Note: Always verify all dates and venue information as accuracy is crucial."""
                 
             logger.info(f"Successfully extracted content: {content}")
             
-            # Apply date format correction
-            content = fix_date_formats(content)
-            
             return content
             
         except Exception as e:
@@ -227,7 +189,7 @@ async def process_text(client: OpenAI, text: str) -> str:
 
 FORMATTING RULES:
 - **ALWAYS use American date format MM/DD for ALL dates (even for European/international tours)**
-- **IMPORTANT: Convert any European format dates (DD/MM) to American format (MM/DD)**
+- **IMPORTANT: Convert any European format dates (DD/MM) to American format (MM/DD) in the output**
 - **For example: "07/03" in European format should be converted to "03/07" in American format (March 7th)**
 - **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15 City, ST" not "06/15 - City, ST")**
 - **ABSOLUTELY NO DASHES in the final output**
@@ -278,6 +240,8 @@ Common Mistakes to Avoid:
 - Using European date format: Use "06/15" (June 15) not "15/06"
 - Incorrect city/ST order: Use "Leeuwarden, NL" not "NL, Leeuwarden"
 - Removing important context: Keep venue details like "(SXSW)" and supporting act info
+- Remember to convert any European format dates (DD/MM) to American format (MM/DD) in the output
+
 
 Note: Always verify all dates and venue information as accuracy is crucial.
 
@@ -304,9 +268,6 @@ Here are the dates to format: {text}"""
                 raise ValueError("No content in AI service response")
                 
             logger.info(f"Received response from model 'google/gemini-2.0-pro-exp-02-05:free': {content}")
-            
-            # Apply date format correction
-            content = fix_date_formats(content)
             
             return content
             
