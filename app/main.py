@@ -50,10 +50,18 @@ def fix_date_formats(text: str) -> str:
         day = int(match.group(1))
         month = int(match.group(2))
         
-        # If day > 12 and month <= 12, it's likely in DD/MM format and needs conversion
+        # Heuristic: If day > 12 and month <= 12, it's likely in DD/MM format and needs conversion
         if day > 12 and month <= 12:
             logger.info(f"Converting date from DD/MM to MM/DD: {match.group(1)}/{match.group(2)} -> {match.group(2)}/{match.group(1)}")
             return f"{month:02d}/{day:02d}"
+        
+        # Contextual check: If the text suggests a European context, apply stricter conversion
+        # Example: If the text contains known European city names or venues
+        european_cities = ["Berlin", "Paris", "London", "Amsterdam"]
+        if any(city in text for city in european_cities) and day <= 12 and month > 12:
+            logger.info(f"Contextual conversion from DD/MM to MM/DD: {match.group(1)}/{match.group(2)} -> {match.group(2)}/{match.group(1)}")
+            return f"{month:02d}/{day:02d}"
+        
         return f"{match.group(1)}/{match.group(2)}"
     
     # Apply the conversion
