@@ -175,9 +175,9 @@ async def process_text(client: OpenAI, text: str) -> str:
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"Processing text with google/gemini-2.0-pro-exp-02-05:free(attempt {attempt + 1}/{max_retries})")
+            logger.info(f"Processing text with google/google/gemini-2.0-flash-thinking-exp:free(attempt {attempt + 1}/{max_retries})")
             response = client.chat.completions.create(
-                model="google/gemini-2.0-pro-exp-02-05:free",
+                model="google/gemini-2.0-flash-thinking-exp:free",
                 messages=[
                     {
                         "role": "system",
@@ -267,7 +267,7 @@ Here are the dates to format: {text}"""
                 logger.error("Empty content in message")
                 raise ValueError("No content in AI service response")
                 
-            logger.info(f"Received response from model 'google/gemini-2.0-pro-exp-02-05:free': {content}")
+            logger.info(f"Received response from model 'google/gemini-2.0-flash-thinking-exp:free': {content}")
             
             return content
             
