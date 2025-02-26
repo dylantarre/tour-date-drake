@@ -94,7 +94,10 @@ async def dates(interaction: discord.Interaction, text: str):
             
             # Send first chunk as initial response
             try:
-                await interaction.followup.send(f"```\n{chunks[0]}\n```\nPlease double-check all info as Tour Date Drake can make mistakes.")
+                await interaction.followup.send(f"Original Text:\n{text}\n\nFormatted Dates:\n```
+{chunks[0]}
+```
+Please double-check all info as Tour Date Drake can make mistakes.")
             except discord.NotFound:
                 logger.error("Initial interaction expired, creating new message")
                 return
@@ -103,7 +106,10 @@ async def dates(interaction: discord.Interaction, text: str):
             if len(chunks) > 1:
                 try:
                     for chunk in chunks[1:]:
-                        await interaction.followup.send(f"```\n(continued...)\n{chunk}\n```")
+                        await interaction.followup.send(f"```
+(continued...)
+{chunk}
+```")
                 except discord.NotFound:
                     logger.error("Follow-up interaction expired")
                     return
@@ -271,12 +277,18 @@ async def imageurl(interaction: discord.Interaction, url: str):
             try:
                 # Send first chunk as initial response with the image
                 await interaction.followup.send(file=image_file)
-                await interaction.followup.send(f"```\n{chunks[0]}\n```\n\nPlease double-check all info as Tour Date Drake can make mistakes.")
+                await interaction.followup.send(f"```
+{chunks[0]}
+```
+\nPlease double-check all info as Tour Date Drake can make mistakes.")
                 
                 # Send remaining chunks as follow-ups
                 if len(chunks) > 1:
                     for chunk in chunks[1:]:
-                        await interaction.followup.send(f"```\n(continued...)\n{chunk}\n```")
+                        await interaction.followup.send(f"```
+(continued...)
+{chunk}
+```")
             except discord.NotFound:
                 logger.error("Interaction expired")
                 return
