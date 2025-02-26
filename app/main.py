@@ -69,6 +69,8 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
 
 FORMATTING RULES:
 - **ALWAYS use American date format MM/DD for ALL dates (even for European/international tours)**
+- **IMPORTANT: Convert any European format dates (DD/MM) to American format (MM/DD)**
+- **For example: "07/03" in European format should be converted to "03/07" in American format (March 7th)**
 - **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15 City, ST" not "06/15 - City, ST")**
 - **ABSOLUTELY NO DASHES in the final output**
 - **Always format as: MM/DD City, ST @ Venue (if venue is known)**
@@ -93,9 +95,9 @@ US Shows:
 06/17 Boston, MA @ The Middle East
 
 European Shows (still using MM/DD format):
-06/20 Hamburg, DE @ Viper Room
-06/21 Berlin, DE @ SO36
-06/22 Wrocław, PL @ Klub Pogłos
+03/07 Berlin, DE @ Cassiopeia (NOT 07/03 - this would be July 3rd)
+06/07 Ypres, BE @ Ieperfest (NOT 07/06 - this would be July 6th)
+07/15 Paris, FR @ Glazart (NOT 15/07 - this would be July 15th)
 
 Mixed Tour with Notes:
 03/14 Austin, TX @ Central Presbyterian Church (SXSW)
@@ -185,6 +187,8 @@ async def process_text(client: OpenAI, text: str) -> str:
 
 FORMATTING RULES:
 - **ALWAYS use American date format MM/DD for ALL dates (even for European/international tours)**
+- **IMPORTANT: Convert any European format dates (DD/MM) to American format (MM/DD)**
+- **For example: "07/03" in European format should be converted to "03/07" in American format (March 7th)**
 - **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15 City, ST" not "06/15 - City, ST")**
 - **ABSOLUTELY NO DASHES in the final output**
 - **Always format as: MM/DD City, ST @ Venue (if venue is known)**
@@ -209,9 +213,9 @@ US Shows:
 06/17 Boston, MA @ The Middle East
 
 European Shows (still using MM/DD format):
-06/20 Hamburg, DE @ Viper Room
-06/21 Berlin, DE @ SO36
-06/22 Wrocław, PL @ Klub Pogłos
+03/07 Berlin, DE @ Cassiopeia (NOT 07/03 - this would be July 3rd)
+06/07 Ypres, BE @ Ieperfest (NOT 07/06 - this would be July 6th)
+07/15 Paris, FR @ Glazart (NOT 15/07 - this would be July 15th)
 
 Mixed Tour with Notes:
 03/14 Austin, TX @ Central Presbyterian Church (SXSW)
