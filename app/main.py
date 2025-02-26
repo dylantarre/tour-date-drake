@@ -131,7 +131,7 @@ Note: Always verify all dates and venue information as accuracy is crucial."""
                 max_tokens=2000
             )
             
-            logger.info(f"Received response from model 'google/gemini-2.0-pro-exp-02-05:free': {response}")
+            logger.info(f"Received response from model 'google/gemini-2.0-flash-thinking-exp:free': {response}")
             
             if hasattr(response, 'error'):
                 error_msg = response.error.get('message', 'Unknown error')
