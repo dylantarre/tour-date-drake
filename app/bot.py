@@ -94,10 +94,7 @@ async def dates(interaction: discord.Interaction, text: str):
             
             # Send first chunk as initial response
             try:
-                await interaction.followup.send(f"Original Text:\n{text}\n\nFormatted Dates:\n```
-{chunks[0]}
-```
-Please double-check all info as Tour Date Drake can make mistakes.")
+                await interaction.followup.send(f"Original Text:\n{text}\n\nFormatted Dates:\n```\n{chunks[0]}\n```\nPlease double-check all info as Tour Date Drake can make mistakes.")
             except discord.NotFound:
                 logger.error("Initial interaction expired, creating new message")
                 return
