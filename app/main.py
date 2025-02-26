@@ -44,7 +44,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"Processing image with model 'google/gemini-2.0-pro-exp-02-05' (attempt {attempt + 1}/{max_retries})")
+            logger.info(f"Processing image with model 'google/gemini-2.0-flash-001' (attempt {attempt + 1}/{max_retries})")
             
             # For URLs, send the URL directly. For uploaded files, use the data URL as is
             image_content = {
@@ -55,7 +55,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
             }
             
             response = client.chat.completions.create(
-                model="google/gemini-2.0-pro-exp-02-05",
+                model="google/gemini-2.0-flash-001",
                 messages=[
                     {
                         "role": "system",
