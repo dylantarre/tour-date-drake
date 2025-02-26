@@ -2,6 +2,7 @@ import os
 import base64
 import logging
 import asyncio
+import re
 from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -36,6 +37,33 @@ def init_openai_client():
         },
         timeout=120.0  # Increased to 120 seconds
     )
+
+def fix_date_formats(text: str) -> str:
+    """
+    Ensure all dates are in MM/DD format by checking and converting any dates that appear to be in DD/MM format.
+    This is a safety check to catch any dates the model might have missed converting.
+    """
+    # Regular expression to find date patterns at the beginning of lines
+    date_pattern = re.compile(r'^(\d{2})/(\d{2})', re.MULTILINE)
+    
+    def convert_if_needed(match):
+        day = int(match.group(1))
+        month = int(match.group(2))
+        
+        # If day > 12 and month <= 12, it's likely in DD/MM format and needs conversion
+        if day > 12 and month <= 12:
+            logger.info(f"Converting date from DD/MM to MM/DD: {match.group(1)}/{match.group(2)} -> {match.group(2)}/{match.group(1)}")
+            return f"{month:02d}/{day:02d}"
+        return f"{match.group(1)}/{match.group(2)}"
+    
+    # Apply the conversion
+    corrected_text = date_pattern.sub(convert_if_needed, text)
+    
+    # Log if any changes were made
+    if corrected_text != text:
+        logger.info("Date formats were corrected in the output")
+    
+    return corrected_text
 
 async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -> str:
     max_retries = 3
@@ -157,6 +185,10 @@ Note: Always verify all dates and venue information as accuracy is crucial."""
                 raise HTTPException(status_code=500, detail="No content in AI service response")
                 
             logger.info(f"Successfully extracted content: {content}")
+            
+            # Apply date format correction
+            content = fix_date_formats(content)
+            
             return content
             
         except Exception as e:
@@ -264,6 +296,10 @@ Here are the dates to format: {text}"""
                 raise ValueError("No content in AI service response")
                 
             logger.info(f"Received response from model 'google/gemini-2.0-pro-exp-02-05:free': {content}")
+            
+            # Apply date format correction
+            content = fix_date_formats(content)
+            
             return content
             
         except Exception as e:
