@@ -1,6 +1,8 @@
 # Tour Date Drake
 
-A FastAPI service that formats tour dates from both text and images using OpenRouter's AI models, with an optional Discord bot interface.
+<img src="https://preview.redd.it/drake-emoji-v0-zdok3qe7gdc91.jpg?width=640&crop=smart&auto=webp&s=1c20ec85b51b7f2c9bd14ff6294009038ccc841c" alt="Drake Emoji" width="100">
+
+> This FastAPI service keeps tour dates clean and structured, pulling from text and images with OpenRouter’s AI. Optional Discord bot included. No more messy dates. 🦉🔥
 
 ## Features
 
