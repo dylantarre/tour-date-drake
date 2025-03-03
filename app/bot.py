@@ -93,6 +93,15 @@ client = TourDateDrake()
 )
 async def dates(interaction: discord.Interaction, text: str):
     try:
+        # Input validation
+        if len(text) > 4000:  # Conservative limit
+            await interaction.response.send_message("Error: Input text is too long. Please keep it under 4000 characters.")
+            return
+            
+        if not text.strip():
+            await interaction.response.send_message("Error: Please provide some text containing tour dates.")
+            return
+
         # First respond that we're working on it
         try:
             await interaction.response.defer(thinking=True, ephemeral=False)
@@ -130,7 +139,11 @@ async def dates(interaction: discord.Interaction, text: str):
                 result = await response.json()
 
             formatted_dates = result.get("formatted_dates", "Error: No dates found")
-            logger.info(f"Sending formatted response to Discord: {formatted_dates}")
+            if not formatted_dates or formatted_dates == "Error: No dates found":
+                await interaction.followup.send("I couldn't find any valid tour dates in your text. Please make sure you've provided text containing tour dates.")
+                return
+                
+            logger.info(f"Sending formatted response to Discord: {formatted_dates[:100]}...")
             
             try:
                 # Send header for original text
@@ -166,8 +179,17 @@ async def dates(interaction: discord.Interaction, text: str):
                     message = f"```\n{chunk}\n```"
                     if i > 0:
                         message = f"```\n(continued...)\n{chunk}\n```"
+                    
+                    # Add disclaimer to the last chunk
                     if i == len(formatted_chunks) - 1:
-                        message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
+                        disclaimer = "\nPlease double-check all info as Tour Date Drake can make mistakes."
+                        if len(message) + len(disclaimer) <= MAX_DISCORD_LENGTH:
+                            message += disclaimer
+                        else:
+                            # If adding disclaimer would exceed limit, send it separately
+                            await interaction.followup.send(message)
+                            await interaction.followup.send(disclaimer)
+                            continue
                         
                     # Double check length before sending
                     if len(message) > MAX_DISCORD_LENGTH:
@@ -177,8 +199,14 @@ async def dates(interaction: discord.Interaction, text: str):
                             sub_message = f"```\n{sub_chunk}\n```"
                             if j > 0:
                                 sub_message = f"```\n(continued...)\n{sub_chunk}\n```"
+                            # Add disclaimer to the last sub-chunk of the last chunk
                             if j == len(sub_chunks) - 1 and i == len(formatted_chunks) - 1:
-                                sub_message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
+                                if len(sub_message) + len(disclaimer) <= MAX_DISCORD_LENGTH:
+                                    sub_message += disclaimer
+                                else:
+                                    await interaction.followup.send(sub_message)
+                                    await interaction.followup.send(disclaimer)
+                                    continue
                             await interaction.followup.send(sub_message)
                     else:
                         await interaction.followup.send(message)
