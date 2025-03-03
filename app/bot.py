@@ -108,25 +108,28 @@ async def dates(interaction: discord.Interaction, text: str):
             formatted_dates = result.get("formatted_dates", "Error: No dates found")
             logger.info(f"Sending formatted response to Discord: {formatted_dates}")
             
-            # Split both original text and formatted dates
-            original_chunks = split_message(text)
-            formatted_chunks = split_message(formatted_dates)
-            
             try:
-                # Send original text in chunks
-                await interaction.followup.send("Original Text:")
+                # First send a header for original text
+                await interaction.followup.send("**Original Text:**")
+                
+                # Split and send original text in chunks
+                original_chunks = split_message(text)
                 for i, chunk in enumerate(original_chunks):
                     message = f"```\n{chunk}\n```"
                     if i > 0:
                         message = f"```\n(continued...)\n{chunk}\n```"
                     await interaction.followup.send(message)
                 
-                # Send formatted dates in chunks
-                await interaction.followup.send("\nFormatted Dates:")
+                # Send a separator and header for formatted dates
+                await interaction.followup.send("**Formatted Dates:**")
+                
+                # Split and send formatted dates in chunks
+                formatted_chunks = split_message(formatted_dates)
                 for i, chunk in enumerate(formatted_chunks):
                     message = f"```\n{chunk}\n```"
                     if i > 0:
                         message = f"```\n(continued...)\n{chunk}\n```"
+                    # Add disclaimer only to the last chunk
                     if i == len(formatted_chunks) - 1:
                         message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
                     await interaction.followup.send(message)
