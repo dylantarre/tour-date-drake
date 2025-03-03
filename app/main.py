@@ -3,12 +3,16 @@ import base64
 import logging
 import asyncio
 import re
-from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi import FastAPI, HTTPException, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from openai import OpenAI
 from dotenv import load_dotenv
 import imghdr
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi.responses import JSONResponse
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -16,7 +20,14 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(title="Tour Date Drake")
+
+# Add rate limit exceeded handler
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Add CORS middleware
 app.add_middleware(
@@ -26,6 +37,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Configure request size limits (10 MB)
+MAX_REQUEST_SIZE = 10 * 1024 * 1024  # 10 MB in bytes
 
 def init_openai_client():
     return OpenAI(
@@ -86,43 +100,7 @@ FORMATTING RULES:
 - Remove any dashes, commas, or extra formatting from the original text
 - For long venue names, keep them concise if possible
 - **IMPORTANT: Preserve all informational notes, supporting act info, and venue details like "(NOTE)" or "* Supporting Band"**
-- If there are notes at the bottom of the list (like "* Supporting Band"), include them at the end of the output
-
-EXAMPLE OUTPUTS:
-
-US Shows:
-06/15 Brooklyn, NY @ Saint Vitus
-06/16 Philadelphia, PA @ First Unitarian Church
-06/17 Boston, MA @ The Middle East
-
-European Shows (still using MM/DD format):
-03/07 Berlin, DE @ Cassiopeia (NOT 07/03 - this would be July 3rd)
-06/07 Ypres, BE @ Ieperfest (NOT 07/06 - this would be July 6th)
-07/15 Paris, FR @ Glazart (NOT 15/07 - this would be July 15th)
-
-Mixed Tour with Notes:
-03/14 Austin, TX @ Central Presbyterian Church (SXSW)
-05/31 Raleigh, NC @ The Ritz *
-06/02 Cleveland, OH @ Globe Iron *
-06/03 Toronto, ON @ HISTORY *
-06/15 Brooklyn, NY @ Saint Vitus
-06/20 Hamburg, DE @ Viper Room
-
-* Supporting Panchiko
-
-Festival Appearances:
-06/13 London, UK @ Lido Festival
-06/14 Manchester, UK @ Outbreak Festival
-06/19 Lisbon, PT @ Kalorama Festival
-06/20 Madrid, ES @ Kalorama Festival
-
-Common Mistakes to Avoid:
-- Using dashes in dates: Use "06/15" not "06/15 -"
-- Using European date format: Use "06/15" (June 15) not "15/06"
-- Incorrect city/ST order: Use "Leeuwarden, NL" not "NL, Leeuwarden"
-- Removing important context: Keep venue details like "(SXSW)" and supporting act info
-- Remember to convert any European format dates (DD/MM) to American format (MM/DD) in the output
-Note: Always verify all dates and venue information as accuracy is crucial."""
+- If there are notes at the bottom of the list (like "* Supporting Band"), include them at the end of the output"""
                             },
                             image_content
                         ]
@@ -204,46 +182,8 @@ FORMATTING RULES:
 - Preserve any special characters in city names
 - Remove any dashes, commas, or extra formatting from the original text
 - For long venue names, keep them concise if possible
-- **IMPORTANT: Preserve all informational notes, supporting act info, and venue details like "(SXSW)" or "* Supporting Band"**
+- **IMPORTANT: Preserve all informational notes, supporting act info, and venue details like "(NOTE)" or "* Supporting Band"**
 - If there are notes at the bottom of the list (like "* Supporting Band"), include them at the end of the output
-
-EXAMPLE OUTPUTS:
-
-US Shows:
-06/15 Brooklyn, NY @ Saint Vitus
-06/16 Philadelphia, PA @ First Unitarian Church
-06/17 Boston, MA @ The Middle East
-
-European Shows (still using MM/DD format):
-03/07 Berlin, DE @ Cassiopeia (NOT 07/03 - this would be July 3rd)
-06/07 Ypres, BE @ Ieperfest (NOT 07/06 - this would be July 6th)
-07/15 Paris, FR @ Glazart (NOT 15/07 - this would be July 15th)
-
-Mixed Tour with Notes:
-03/14 Austin, TX @ Central Presbyterian Church (SXSW)
-05/31 Raleigh, NC @ The Ritz *
-06/02 Cleveland, OH @ Globe Iron *
-06/03 Toronto, ON @ HISTORY *
-06/15 Brooklyn, NY @ Saint Vitus
-06/20 Hamburg, DE @ Viper Room
-
-* Supporting Panchiko
-
-Festival Appearances:
-06/13 London, UK @ Lido Festival
-06/14 Manchester, UK @ Outbreak Festival
-06/19 Lisbon, PT @ Kalorama Festival
-06/20 Madrid, ES @ Kalorama Festival
-
-Common Mistakes to Avoid:
-- Using dashes in dates: Use "06/15" not "06/15 -"
-- Using European date format: Use "06/15" (June 15) not "15/06"
-- Incorrect city/ST order: Use "Leeuwarden, NL" not "NL, Leeuwarden"
-- Removing important context: Keep venue details like "(SXSW)" and supporting act info
-- Remember to convert any European format dates (DD/MM) to American format (MM/DD) in the output
-
-
-Note: Always verify all dates and venue information as accuracy is crucial.
 
 Here are the dates to format: {text}"""
                     }
@@ -283,11 +223,12 @@ class TextRequest(BaseModel):
     text: str
 
 @app.post("/format/text")
-async def format_text(request: TextRequest):
+@limiter.limit("20/minute")  # Rate limit: 20 requests per minute
+async def format_text(request: Request, text_request: TextRequest):
     try:
-        logger.info(f"Received text request: {request.text[:100]}...")
+        logger.info(f"Received text request: {text_request.text[:100]}...")
         client = init_openai_client()
-        result = await process_text(client, request.text)
+        result = await process_text(client, text_request.text)
         logger.info(f"Returning formatted result: {result}")
         return {"formatted_dates": result}
     except Exception as e:
@@ -295,10 +236,19 @@ async def format_text(request: TextRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/format/image")
-async def format_image(file: UploadFile):
+@limiter.limit("10/minute")  # Rate limit: 10 requests per minute
+async def format_image(request: Request, file: UploadFile):
     try:
         logger.info(f"Received file: {file.filename} ({file.content_type})")
-        contents = await file.read()
+        
+        # Check file size before processing
+        contents = await file.read(MAX_REQUEST_SIZE + 1)  # Read one extra byte to check if file is too large
+        if len(contents) > MAX_REQUEST_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File size exceeds maximum limit of {MAX_REQUEST_SIZE / (1024 * 1024)}MB"
+            )
+            
         logger.info(f"File size: {len(contents)} bytes")
         
         # Initialize OpenAI client
@@ -334,9 +284,17 @@ async def format_image(file: UploadFile):
             
         logger.info("Successfully processed image")
         return {"formatted_dates": result}
+    except HTTPException as e:
+        raise e
     except Exception as e:
         error_msg = str(e)
         logger.error(f"Error processing image: {error_msg}", exc_info=True)
-        if isinstance(e, HTTPException):
-            raise e
-        raise HTTPException(status_code=500, detail=error_msg) 
+        raise HTTPException(status_code=500, detail=error_msg)
+
+# Add a startup event to log the rate limits
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Starting Tour Date Drake API with the following rate limits:")
+    logger.info("- /format/text: 20 requests per minute")
+    logger.info("- /format/image: 10 requests per minute")
+    logger.info(f"- Maximum request size: {MAX_REQUEST_SIZE / (1024 * 1024)}MB") 
