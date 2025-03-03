@@ -63,7 +63,16 @@ client = TourDateDrake()
 async def dates(interaction: discord.Interaction, text: str):
     try:
         # First respond that we're working on it
-        await interaction.response.defer(thinking=True, ephemeral=False)
+        try:
+            await interaction.response.defer(thinking=True, ephemeral=False)
+        except discord.errors.NotFound:
+            logger.error("Interaction not found - it may have timed out")
+            return
+        except discord.errors.HTTPException as e:
+            if e.code == 40060:  # Interaction already acknowledged
+                logger.warning("Interaction was already acknowledged")
+            else:
+                raise
         
         async with aiohttp.ClientSession() as session:
             # Process as regular text
@@ -81,7 +90,10 @@ async def dates(interaction: discord.Interaction, text: str):
                     except:
                         error_detail = error_text
                     logger.error(f"API error response: {error_text}")
-                    await interaction.followup.send(f"Error: {error_detail}")
+                    try:
+                        await interaction.followup.send(f"Error: {error_detail}")
+                    except discord.NotFound:
+                        logger.error("Interaction expired during error handling")
                     return
                     
                 result = await response.json()
@@ -89,24 +101,28 @@ async def dates(interaction: discord.Interaction, text: str):
             formatted_dates = result.get("formatted_dates", "Error: No dates found")
             logger.info(f"Sending formatted response to Discord: {formatted_dates}")
             
-            # Split long messages
-            chunks = split_message(formatted_dates)
+            # Split both original text and formatted dates
+            original_chunks = split_message(text)
+            formatted_chunks = split_message(formatted_dates)
             
-            # Send first chunk as initial response
+            # Send first chunks as initial response
             try:
-                await interaction.followup.send(f"Original Text:\n{text}\n\nFormatted Dates:\n```\n{chunks[0]}\n```\nPlease double-check all info as Tour Date Drake can make mistakes.")
-            except discord.NotFound:
-                logger.error("Initial interaction expired, creating new message")
-                return
+                # Send original text in chunks if needed
+                await interaction.followup.send("Original Text:")
+                for chunk in original_chunks:
+                    await interaction.followup.send(f"```\n{chunk}\n```")
                 
-            # Send remaining chunks as follow-ups
-            if len(chunks) > 1:
-                try:
-                    for chunk in chunks[1:]:
+                # Send formatted dates in chunks
+                await interaction.followup.send("\nFormatted Dates:")
+                await interaction.followup.send(f"```\n{formatted_chunks[0]}\n```\nPlease double-check all info as Tour Date Drake can make mistakes.")
+                
+                # Send remaining formatted chunks as follow-ups
+                if len(formatted_chunks) > 1:
+                    for chunk in formatted_chunks[1:]:
                         await interaction.followup.send(f"```\n(continued...)\n{chunk}\n```")
-                except discord.NotFound:
-                    logger.error("Follow-up interaction expired")
-                    return
+            except discord.NotFound:
+                logger.error("Initial interaction expired")
+                return
 
     except asyncio.TimeoutError:
         logger.error("Request timed out")
