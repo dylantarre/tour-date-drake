@@ -18,23 +18,30 @@ API_URL = os.getenv("API_URL", "http://api:4343")
 MAX_DISCORD_LENGTH = 2000
 CODE_BLOCK_OVERHEAD = 7  # Length of "```\n" + "\n```"
 CONTINUED_OVERHEAD = 13  # Length of "(continued...)\n"
-EFFECTIVE_LENGTH = MAX_DISCORD_LENGTH - CODE_BLOCK_OVERHEAD  # Maximum length for the content inside code blocks
+EFFECTIVE_LENGTH = MAX_DISCORD_LENGTH - CODE_BLOCK_OVERHEAD - CONTINUED_OVERHEAD  # Maximum length for the content inside code blocks
 
 def split_message(message: str) -> list[str]:
     """Split a message into chunks that fit within Discord's character limit."""
+    if not message:
+        return []
+        
+    # If the message is short enough, return it as is
+    if len(message) <= EFFECTIVE_LENGTH:
+        return [message]
+        
     chunks = []
     current_chunk = ""
     
     for line in message.split('\n'):
-        # Calculate the effective length including the overhead for continued chunks
-        effective_max = EFFECTIVE_LENGTH - (CONTINUED_OVERHEAD if chunks else 0)
-        
-        # If adding this line would exceed the limit, start a new chunk
-        if len(current_chunk) + len(line) + 1 > effective_max:
+        # If adding this line would exceed the limit
+        if len(current_chunk) + len(line) + 1 > EFFECTIVE_LENGTH:
+            # If the current chunk is not empty, add it to chunks
             if current_chunk:
                 chunks.append(current_chunk.strip())
+            # Start a new chunk with this line
             current_chunk = line
         else:
+            # Add the line to the current chunk
             current_chunk = current_chunk + '\n' + line if current_chunk else line
     
     # Add the last chunk if it's not empty
@@ -105,21 +112,25 @@ async def dates(interaction: discord.Interaction, text: str):
             original_chunks = split_message(text)
             formatted_chunks = split_message(formatted_dates)
             
-            # Send first chunks as initial response
             try:
-                # Send original text in chunks if needed
+                # Send original text in chunks
                 await interaction.followup.send("Original Text:")
-                for chunk in original_chunks:
-                    await interaction.followup.send(f"```\n{chunk}\n```")
+                for i, chunk in enumerate(original_chunks):
+                    message = f"```\n{chunk}\n```"
+                    if i > 0:
+                        message = f"```\n(continued...)\n{chunk}\n```"
+                    await interaction.followup.send(message)
                 
                 # Send formatted dates in chunks
                 await interaction.followup.send("\nFormatted Dates:")
-                await interaction.followup.send(f"```\n{formatted_chunks[0]}\n```\nPlease double-check all info as Tour Date Drake can make mistakes.")
-                
-                # Send remaining formatted chunks as follow-ups
-                if len(formatted_chunks) > 1:
-                    for chunk in formatted_chunks[1:]:
-                        await interaction.followup.send(f"```\n(continued...)\n{chunk}\n```")
+                for i, chunk in enumerate(formatted_chunks):
+                    message = f"```\n{chunk}\n```"
+                    if i > 0:
+                        message = f"```\n(continued...)\n{chunk}\n```"
+                    if i == len(formatted_chunks) - 1:
+                        message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
+                    await interaction.followup.send(message)
+                    
             except discord.NotFound:
                 logger.error("Initial interaction expired")
                 return
@@ -187,25 +198,20 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
             # Split long messages
             chunks = split_message(formatted_dates)
             
-            # Create a discord.File from the image data
-            image_io = BytesIO(image_data)
-            image_file = discord.File(fp=image_io, filename=image.filename)
-            
             try:
                 # Send first chunk as initial response with the image
-                await interaction.followup.send(file=image_file)
-                await interaction.followup.send(f"```\n{chunks[0]}\n```\nPlease double-check all info as Tour Date Drake can make mistakes.")
-                
-                # Send remaining chunks as follow-ups
-                if len(chunks) > 1:
-                    for chunk in chunks[1:]:
-                        await interaction.followup.send(f"```\n(continued...)\n{chunk}\n```")
+                await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=image.filename))
+                for i, chunk in enumerate(chunks):
+                    message = f"```\n{chunk}\n```"
+                    if i > 0:
+                        message = f"```\n(continued...)\n{chunk}\n```"
+                    if i == len(chunks) - 1:
+                        message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
+                    await interaction.followup.send(message)
+                    
             except discord.NotFound:
                 logger.error("Interaction expired")
                 return
-            finally:
-                # Clean up the BytesIO buffer
-                image_io.close()
                 
     except asyncio.TimeoutError:
         logger.error("Request timed out")
@@ -280,25 +286,20 @@ async def imageurl(interaction: discord.Interaction, url: str):
             # Split long messages
             chunks = split_message(formatted_dates)
             
-            # Create a discord.File from the image data
-            image_io = BytesIO(image_data)
-            image_file = discord.File(fp=image_io, filename=filename)
-            
             try:
                 # Send first chunk as initial response with the image
-                await interaction.followup.send(file=image_file)
-                await interaction.followup.send(f"```\n{chunks[0]}\n```\nPlease double-check all info as Tour Date Drake can make mistakes.")
-                
-                # Send remaining chunks as follow-ups
-                if len(chunks) > 1:
-                    for chunk in chunks[1:]:
-                        await interaction.followup.send(f"```\n(continued...)\n{chunk}\n```")
+                await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=filename))
+                for i, chunk in enumerate(chunks):
+                    message = f"```\n{chunk}\n```"
+                    if i > 0:
+                        message = f"```\n(continued...)\n{chunk}\n```"
+                    if i == len(chunks) - 1:
+                        message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
+                    await interaction.followup.send(message)
+                    
             except discord.NotFound:
                 logger.error("Interaction expired")
                 return
-            finally:
-                # Clean up the BytesIO buffer
-                image_io.close()
                 
     except asyncio.TimeoutError:
         logger.error("Request timed out")
