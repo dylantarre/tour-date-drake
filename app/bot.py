@@ -18,7 +18,9 @@ API_URL = os.getenv("API_URL", "http://api:4343")
 MAX_DISCORD_LENGTH = 2000
 CODE_BLOCK_OVERHEAD = 7  # Length of "```\n" + "\n```"
 CONTINUED_OVERHEAD = 13  # Length of "(continued...)\n"
-EFFECTIVE_LENGTH = MAX_DISCORD_LENGTH - CODE_BLOCK_OVERHEAD - CONTINUED_OVERHEAD  # Maximum length for the content inside code blocks
+DISCLAIMER_LENGTH = 65  # Length of the disclaimer message
+HEADER_LENGTH = 20  # Conservative estimate for headers and formatting
+EFFECTIVE_LENGTH = MAX_DISCORD_LENGTH - CODE_BLOCK_OVERHEAD - CONTINUED_OVERHEAD - HEADER_LENGTH  # Maximum safe length
 
 def split_message(message: str) -> list[str]:
     """Split a message into chunks that fit within Discord's character limit."""
@@ -32,17 +34,39 @@ def split_message(message: str) -> list[str]:
     chunks = []
     current_chunk = ""
     
-    for line in message.split('\n'):
-        # If adding this line would exceed the limit
-        if len(current_chunk) + len(line) + 1 > EFFECTIVE_LENGTH:
-            # If the current chunk is not empty, add it to chunks
-            if current_chunk:
-                chunks.append(current_chunk.strip())
-            # Start a new chunk with this line
-            current_chunk = line
+    # Split into lines first
+    lines = message.split('\n')
+    
+    for line in lines:
+        # If a single line is too long, split it by words
+        if len(line) > EFFECTIVE_LENGTH:
+            words = line.split(' ')
+            current_line = ""
+            
+            for word in words:
+                if len(current_line) + len(word) + 1 <= EFFECTIVE_LENGTH:
+                    current_line = current_line + ' ' + word if current_line else word
+                else:
+                    if current_chunk:
+                        chunks.append(current_chunk.strip())
+                    current_chunk = word
+                    current_line = word
+            
+            if current_line:
+                if len(current_chunk) + len(current_line) + 1 > EFFECTIVE_LENGTH:
+                    if current_chunk:
+                        chunks.append(current_chunk.strip())
+                    current_chunk = current_line
+                else:
+                    current_chunk = current_chunk + '\n' + current_line if current_chunk else current_line
         else:
-            # Add the line to the current chunk
-            current_chunk = current_chunk + '\n' + line if current_chunk else line
+            # Handle normal lines
+            if len(current_chunk) + len(line) + 1 > EFFECTIVE_LENGTH:
+                if current_chunk:
+                    chunks.append(current_chunk.strip())
+                current_chunk = line
+            else:
+                current_chunk = current_chunk + '\n' + line if current_chunk else line
     
     # Add the last chunk if it's not empty
     if current_chunk:
@@ -109,30 +133,55 @@ async def dates(interaction: discord.Interaction, text: str):
             logger.info(f"Sending formatted response to Discord: {formatted_dates}")
             
             try:
-                # First send a header for original text
+                # Send header for original text
                 await interaction.followup.send("**Original Text:**")
                 
                 # Split and send original text in chunks
                 original_chunks = split_message(text)
                 for i, chunk in enumerate(original_chunks):
+                    # Calculate total message length including formatting
                     message = f"```\n{chunk}\n```"
                     if i > 0:
                         message = f"```\n(continued...)\n{chunk}\n```"
-                    await interaction.followup.send(message)
+                    
+                    # Double check length before sending
+                    if len(message) > MAX_DISCORD_LENGTH:
+                        logger.warning(f"Message too long ({len(message)} chars), splitting further")
+                        sub_chunks = split_message(chunk)
+                        for j, sub_chunk in enumerate(sub_chunks):
+                            sub_message = f"```\n{sub_chunk}\n```"
+                            if j > 0:
+                                sub_message = f"```\n(continued...)\n{sub_chunk}\n```"
+                            await interaction.followup.send(sub_message)
+                    else:
+                        await interaction.followup.send(message)
                 
-                # Send a separator and header for formatted dates
+                # Send header for formatted dates
                 await interaction.followup.send("**Formatted Dates:**")
                 
                 # Split and send formatted dates in chunks
                 formatted_chunks = split_message(formatted_dates)
                 for i, chunk in enumerate(formatted_chunks):
+                    # Calculate total message length including formatting
                     message = f"```\n{chunk}\n```"
                     if i > 0:
                         message = f"```\n(continued...)\n{chunk}\n```"
-                    # Add disclaimer only to the last chunk
                     if i == len(formatted_chunks) - 1:
                         message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
-                    await interaction.followup.send(message)
+                        
+                    # Double check length before sending
+                    if len(message) > MAX_DISCORD_LENGTH:
+                        logger.warning(f"Message too long ({len(message)} chars), splitting further")
+                        sub_chunks = split_message(chunk)
+                        for j, sub_chunk in enumerate(sub_chunks):
+                            sub_message = f"```\n{sub_chunk}\n```"
+                            if j > 0:
+                                sub_message = f"```\n(continued...)\n{sub_chunk}\n```"
+                            if j == len(sub_chunks) - 1 and i == len(formatted_chunks) - 1:
+                                sub_message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
+                            await interaction.followup.send(sub_message)
+                    else:
+                        await interaction.followup.send(message)
                     
             except discord.NotFound:
                 logger.error("Initial interaction expired")
