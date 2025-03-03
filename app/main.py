@@ -38,8 +38,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure request size limits (10 MB)
-MAX_REQUEST_SIZE = 10 * 1024 * 1024  # 10 MB in bytes
+# Configure request size limits (20 GB)
+MAX_REQUEST_SIZE = 20 * 1024 * 1024 * 1024  # 20 GB in bytes
+LARGE_FILE_THRESHOLD = 1 * 1024 * 1024 * 1024  # 1 GB in bytes
 
 def init_openai_client():
     return OpenAI(
@@ -243,13 +244,18 @@ async def format_image(request: Request, file: UploadFile):
         
         # Check file size before processing
         contents = await file.read(MAX_REQUEST_SIZE + 1)  # Read one extra byte to check if file is too large
-        if len(contents) > MAX_REQUEST_SIZE:
+        file_size = len(contents)
+        
+        if file_size > MAX_REQUEST_SIZE:
             raise HTTPException(
                 status_code=413,
-                detail=f"File size exceeds maximum limit of {MAX_REQUEST_SIZE / (1024 * 1024)}MB"
+                detail=f"File size exceeds maximum limit of {MAX_REQUEST_SIZE / (1024 * 1024 * 1024):.1f}GB"
             )
             
-        logger.info(f"File size: {len(contents)} bytes")
+        if file_size > LARGE_FILE_THRESHOLD:
+            logger.warning(f"Processing large file ({file_size / (1024 * 1024 * 1024):.1f}GB). This may impact server performance.")
+            
+        logger.info(f"File size: {file_size / (1024 * 1024):.1f}MB")
         
         # Initialize OpenAI client
         client = init_openai_client()
@@ -277,10 +283,16 @@ async def format_image(request: Request, file: UploadFile):
             content_type = mime_types.get(actual_type, f'image/{actual_type}')
             logger.info(f"Detected content type: {content_type}")
             
-            image_base64 = base64.b64encode(contents).decode('utf-8')
-            logger.info(f"Base64 size: {len(image_base64)} chars")
-            data_url = f"data:{content_type};base64,{image_base64}"
-            result = await process_image(client, data_url, is_url=False)
+            try:
+                image_base64 = base64.b64encode(contents).decode('utf-8')
+                logger.info(f"Base64 size: {len(image_base64) / (1024 * 1024):.1f}MB")
+                data_url = f"data:{content_type};base64,{image_base64}"
+                result = await process_image(client, data_url, is_url=False)
+            finally:
+                # Explicitly delete large objects to help garbage collection
+                del contents
+                del image_base64
+                del data_url
             
         logger.info("Successfully processed image")
         return {"formatted_dates": result}
@@ -294,7 +306,8 @@ async def format_image(request: Request, file: UploadFile):
 # Add a startup event to log the rate limits
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Starting Tour Date Drake API with the following rate limits:")
+    logger.info("Starting Tour Date Drake API with the following limits:")
     logger.info("- /format/text: 20 requests per minute")
     logger.info("- /format/image: 10 requests per minute")
-    logger.info(f"- Maximum request size: {MAX_REQUEST_SIZE / (1024 * 1024)}MB") 
+    logger.info(f"- Maximum request size: {MAX_REQUEST_SIZE / (1024 * 1024 * 1024):.1f}GB")
+    logger.info(f"- Large file warning threshold: {LARGE_FILE_THRESHOLD / (1024 * 1024 * 1024):.1f}GB") 
