@@ -146,15 +146,14 @@ async def dates(interaction: discord.Interaction, text: str):
             logger.info(f"Sending formatted response to Discord: {formatted_dates[:100]}...")
             
             try:
-                # Send header for original text
-                await interaction.followup.send("**Original Text:**")
-                
                 # Split and send original text in chunks
                 original_chunks = split_message(text)
                 for i, chunk in enumerate(original_chunks):
                     # Calculate total message length including formatting
-                    message = f"```\n{chunk}\n```"
-                    if i > 0:
+                    if i == 0:
+                        # First chunk includes the header
+                        message = f"**Original Text:**\n```\n{chunk}\n```"
+                    else:
                         message = f"```\n(continued...)\n{chunk}\n```"
                     
                     # Double check length before sending
@@ -162,22 +161,23 @@ async def dates(interaction: discord.Interaction, text: str):
                         logger.warning(f"Message too long ({len(message)} chars), splitting further")
                         sub_chunks = split_message(chunk)
                         for j, sub_chunk in enumerate(sub_chunks):
-                            sub_message = f"```\n{sub_chunk}\n```"
-                            if j > 0:
+                            if j == 0 and i == 0:
+                                # First sub-chunk of first chunk includes header
+                                sub_message = f"**Original Text:**\n```\n{sub_chunk}\n```"
+                            else:
                                 sub_message = f"```\n(continued...)\n{sub_chunk}\n```"
                             await interaction.followup.send(sub_message)
                     else:
                         await interaction.followup.send(message)
                 
-                # Send header for formatted dates
-                await interaction.followup.send("**Formatted Dates:**")
-                
                 # Split and send formatted dates in chunks
                 formatted_chunks = split_message(formatted_dates)
                 for i, chunk in enumerate(formatted_chunks):
                     # Calculate total message length including formatting
-                    message = f"```\n{chunk}\n```"
-                    if i > 0:
+                    if i == 0:
+                        # First chunk includes the header
+                        message = f"**Formatted Dates:**\n```\n{chunk}\n```"
+                    else:
                         message = f"```\n(continued...)\n{chunk}\n```"
                     
                     # Add disclaimer to the last chunk
@@ -196,8 +196,10 @@ async def dates(interaction: discord.Interaction, text: str):
                         logger.warning(f"Message too long ({len(message)} chars), splitting further")
                         sub_chunks = split_message(chunk)
                         for j, sub_chunk in enumerate(sub_chunks):
-                            sub_message = f"```\n{sub_chunk}\n```"
-                            if j > 0:
+                            if j == 0 and i == 0:
+                                # First sub-chunk of first chunk includes header
+                                sub_message = f"**Formatted Dates:**\n```\n{sub_chunk}\n```"
+                            else:
                                 sub_message = f"```\n(continued...)\n{sub_chunk}\n```"
                             # Add disclaimer to the last sub-chunk of the last chunk
                             if j == len(sub_chunks) - 1 and i == len(formatted_chunks) - 1:
