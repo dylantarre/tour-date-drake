@@ -6,6 +6,7 @@ import logging
 from dotenv import load_dotenv
 import asyncio
 from io import BytesIO
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -324,36 +325,23 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
                 if band_names:
                     # Format band names as a list
                     band_list = ""
-                    for i, band in enumerate(band_names.split('\n')):
+                    # Remove any headers like "Bands:" or "Band Names:"
+                    cleaned_band_names = re.sub(r'^(?i)(bands?:?|band\s*names?:?)\s*', '', band_names.strip(), flags=re.MULTILINE)
+                    
+                    for i, band in enumerate(cleaned_band_names.split('\n')):
                         if band.strip():
                             # Remove any existing bullet points or dashes at the beginning of the line
                             clean_band = band.strip()
                             if clean_band.startswith('•') or clean_band.startswith('-') or clean_band.startswith('*'):
                                 clean_band = clean_band[1:].strip()
-                            
-                            # Skip header lines like "Bands:" or "Band Names:"
-                            if not (clean_band.lower().startswith("band") or 
-                                   clean_band.lower().startswith("artist") or 
-                                   clean_band.lower() == "bands:" or 
-                                   clean_band.lower() == "artists:"):
-                                band_list += f"• {clean_band}\n"
+                            band_list += f"• {clean_band}\n"
                     
                     combined_message += f"**Band Names:**\n```\n{band_list}```"
                 
                 # Add formatted dates - no extra line break
-                # Remove any header lines from formatted dates
-                cleaned_dates = ""
-                for line in formatted_dates.split('\n'):
-                    if not (line.lower().startswith("tour date") or 
-                           line.lower().startswith("date") or 
-                           line.lower() == "tour dates:" or 
-                           line.lower() == "dates:"):
-                        cleaned_dates += line + "\n"
-                
-                combined_message += f"\n**Formatted Dates:**\n```\n{cleaned_dates}```"
-                
-                # Add disclaimer at the end
-                combined_message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
+                # Remove any headers like "Tour Dates:" or "Formatted Dates:"
+                cleaned_dates = re.sub(r'^(?i)(tour\s*dates?:?|formatted\s*dates?:?|dates?:?)\s*', '', formatted_dates.strip(), flags=re.MULTILINE)
+                combined_message += f"\n**Formatted Dates:**\n```\n{cleaned_dates}\n```"
                 
                 # Split the combined message if it's too long
                 combined_chunks = split_message(combined_message)
@@ -447,36 +435,23 @@ async def imageurl(interaction: discord.Interaction, url: str):
                 if band_names:
                     # Format band names as a list
                     band_list = ""
-                    for i, band in enumerate(band_names.split('\n')):
+                    # Remove any headers like "Bands:" or "Band Names:"
+                    cleaned_band_names = re.sub(r'^(?i)(bands?:?|band\s*names?:?)\s*', '', band_names.strip(), flags=re.MULTILINE)
+                    
+                    for i, band in enumerate(cleaned_band_names.split('\n')):
                         if band.strip():
                             # Remove any existing bullet points or dashes at the beginning of the line
                             clean_band = band.strip()
                             if clean_band.startswith('•') or clean_band.startswith('-') or clean_band.startswith('*'):
                                 clean_band = clean_band[1:].strip()
-                            
-                            # Skip header lines like "Bands:" or "Band Names:"
-                            if not (clean_band.lower().startswith("band") or 
-                                   clean_band.lower().startswith("artist") or 
-                                   clean_band.lower() == "bands:" or 
-                                   clean_band.lower() == "artists:"):
-                                band_list += f"• {clean_band}\n"
+                            band_list += f"• {clean_band}\n"
                     
                     combined_message += f"**Band Names:**\n```\n{band_list}```"
                 
                 # Add formatted dates - no extra line break
-                # Remove any header lines from formatted dates
-                cleaned_dates = ""
-                for line in formatted_dates.split('\n'):
-                    if not (line.lower().startswith("tour date") or 
-                           line.lower().startswith("date") or 
-                           line.lower() == "tour dates:" or 
-                           line.lower() == "dates:"):
-                        cleaned_dates += line + "\n"
-                
-                combined_message += f"\n**Formatted Dates:**\n```\n{cleaned_dates}```"
-                
-                # Add disclaimer at the end
-                combined_message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
+                # Remove any headers like "Tour Dates:" or "Formatted Dates:"
+                cleaned_dates = re.sub(r'^(?i)(tour\s*dates?:?|formatted\s*dates?:?|dates?:?)\s*', '', formatted_dates.strip(), flags=re.MULTILINE)
+                combined_message += f"\n**Formatted Dates:**\n```\n{cleaned_dates}\n```"
                 
                 # Split the combined message if it's too long
                 combined_chunks = split_message(combined_message)

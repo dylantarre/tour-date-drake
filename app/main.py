@@ -86,11 +86,11 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
 FORMATTING RULES FOR TOUR DATES:
 - **ALWAYS use American date format MM/DD for ALL dates (even for European/international tours)**
 - **IMPORTANT: Convert any European format dates (DD/MM) to American format (MM/DD) in the output**
-- **For example: "07/03" in European format should be converted to "03/07" in American format \(March 7th\)**
+- **For example: "07/03" in European format should be converted to "03/07" in American format (March 7th)**
 - **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15 City, ST" not "06/15 - City, ST")**
 - **ABSOLUTELY NO DASHES in the final output**
 - **Always format as: MM/DD City, ST @ Venue (if venue is known)**
-- City and Venue should be in Title Case (capitalize first letter of each word)
+- City and Venue names should have normal capitalization (e.g., "Hamburg" not "HAMBURG")
 - **IMPORTANT: Venue names must ALWAYS be in Title Case (e.g., "The Fillmore" not "THE FILLMORE" or "the fillmore")**
 - If venues are listed separately, match them to the correct dates. If a venue cannot be matched, omit it.
 - For US states, ST is the state code (e.g., NY, CA)
@@ -103,6 +103,7 @@ FORMATTING RULES FOR TOUR DATES:
 - For long venue names, keep them concise if possible
 - **IMPORTANT: Preserve all informational notes, supporting act info, and venue details like "(NOTE)" or "* Supporting Band"**
 - If there are notes at the bottom of the list (like "* Supporting Band"), include them at the end of the output
+- **IMPORTANT: DO NOT include headers like "Tour Dates:" or "Formatted Dates:" within the tour dates section**
 
 **EXAMPLES OF CORRECTLY FORMATTED TOUR DATES:**
 
@@ -138,8 +139,7 @@ BAND NAME EXTRACTION:
 - If it's a festival or multi-artist show, list all artists/bands that are visible
 - **Format band names as an unordered list, with one band name per line, preceded by a bullet point or dash**
 - **Ensure band names use normal capitalization (Title Case), not ALL CAPS unless that's the official styling of the band name**
-- **DO NOT include headers like "Bands:" or "Artists:" in your output - just list the band names directly**
-- **DO NOT include section titles within your lists - the Discord bot will add these automatically**
+- **DO NOT include headers like "Bands:" or "Band Names:" within the band names section**
 
 **EXAMPLES OF CORRECTLY FORMATTED BAND NAMES:**
 
@@ -168,9 +168,7 @@ Example 3 (Festival Lineup):
 • A$AP Rocky
 ```
 
-Your response should include both the formatted tour dates and the band names in separate sections.
-
-**IMPORTANT: DO NOT include headers like "Tour Dates:" or "Dates:" in your output - just list the dates directly**
+Your response should include both the formatted tour dates and the band names in separate sections. **DO NOT include section headers like "Tour Dates:" or "Formatted Dates:" within the content of each section.**"""
                             },
                             image_content
                         ]
@@ -274,17 +272,16 @@ async def process_text(client: OpenAI, text: str) -> str:
                     },
                     {
                         "role": "user",
-                        "content": f"""
-Please extract and format all tour dates and band names from this text using these rules:
+                        "content": f"""Please extract and format all tour dates and band names from this text using these rules:
 
 FORMATTING RULES FOR TOUR DATES:
 - **ALWAYS use American date format MM/DD for ALL dates (even for European/international tours)**
 - **IMPORTANT: Convert any European format dates (DD/MM) to American format (MM/DD) in the output**
-- **For example: "07/03" in European format should be converted to "03/07" in American format \(March 7th\)**
+- **For example: "07/03" in European format should be converted to "03/07" in American format (March 7th)**
 - **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15 City, ST" not "06/15 - City, ST")**
 - **ABSOLUTELY NO DASHES in the final output**
 - **Always format as: MM/DD City, ST @ Venue (if venue is known)**
-- City and Venue should be in Title Case (capitalize first letter of each word)
+- City and Venue names should have normal capitalization (e.g., "Hamburg" not "HAMBURG")
 - **IMPORTANT: Venue names must ALWAYS be in Title Case (e.g., "The Fillmore" not "THE FILLMORE" or "the fillmore")**
 - If venues are listed separately, match them to the correct dates. If a venue cannot be matched, omit it.
 - For US states, ST is the state code (e.g., NY, CA)
@@ -297,6 +294,7 @@ FORMATTING RULES FOR TOUR DATES:
 - For long venue names, keep them concise if possible
 - **IMPORTANT: Preserve all informational notes, supporting act info, and venue details like "(NOTE)" or "* Supporting Band"**
 - If there are notes at the bottom of the list (like "* Supporting Band"), include them at the end of the output
+- **IMPORTANT: DO NOT include headers like "Tour Dates:" or "Formatted Dates:" within the tour dates section**
 
 **EXAMPLES OF CORRECTLY FORMATTED TOUR DATES:**
 
@@ -332,8 +330,7 @@ BAND NAME EXTRACTION:
 - If it's a festival or multi-artist show, list all artists/bands that are mentioned
 - **Format band names as an unordered list, with one band name per line, preceded by a bullet point or dash**
 - **Ensure band names use normal capitalization (Title Case), not ALL CAPS unless that's the official styling of the band name**
-- **DO NOT include headers like "Bands:" or "Artists:" in your output - just list the band names directly**
-- **DO NOT include section titles within your lists - the Discord bot will add these automatically**
+- **DO NOT include headers like "Bands:" or "Band Names:" within the band names section**
 
 **EXAMPLES OF CORRECTLY FORMATTED BAND NAMES:**
 
@@ -362,11 +359,9 @@ Example 3 (Festival Lineup):
 • A$AP Rocky
 ```
 
-Your response should include both the formatted tour dates and the band names in separate sections.
+Your response should include both the formatted tour dates and the band names in separate sections. **DO NOT include section headers like "Tour Dates:" or "Formatted Dates:" within the content of each section.**
 
-**IMPORTANT: DO NOT include headers like "Tour Dates:" or "Dates:" in your output - just list the dates directly**
-Here are the dates to format: {text}
-"""
+Here are the dates to format: {text}"""
                     }
                 ],
                 max_tokens=2000
