@@ -326,7 +326,7 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
                     # Format band names as a list
                     band_list = ""
                     # Remove any headers like "Bands:" or "Band Names:"
-                    cleaned_band_names = re.sub(r'^(?i)(bands?:?|band\s*names?:?)\s*', '', band_names.strip(), flags=re.MULTILINE)
+                    cleaned_band_names = re.sub(r'(?i)^(bands?:?|band\s*names?:?)\s*', '', band_names.strip(), flags=re.MULTILINE)
                     
                     for i, band in enumerate(cleaned_band_names.split('\n')):
                         if band.strip():
@@ -340,7 +340,7 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
                 
                 # Add formatted dates - no extra line break
                 # Remove any headers like "Tour Dates:" or "Formatted Dates:"
-                cleaned_dates = re.sub(r'^(?i)(tour\s*dates?:?|formatted\s*dates?:?|dates?:?)\s*', '', formatted_dates.strip(), flags=re.MULTILINE)
+                cleaned_dates = re.sub(r'(?i)^(tour\s*dates?:?|formatted\s*dates?:?|dates?:?)\s*', '', formatted_dates.strip(), flags=re.MULTILINE)
                 combined_message += f"\n**Formatted Dates:**\n```\n{cleaned_dates}\n```"
                 
                 # Add disclaimer
@@ -439,7 +439,7 @@ async def imageurl(interaction: discord.Interaction, url: str):
                     # Format band names as a list
                     band_list = ""
                     # Remove any headers like "Bands:" or "Band Names:"
-                    cleaned_band_names = re.sub(r'^(?i)(bands?:?|band\s*names?:?)\s*', '', band_names.strip(), flags=re.MULTILINE)
+                    cleaned_band_names = re.sub(r'(?i)^(bands?:?|band\s*names?:?)\s*', '', band_names.strip(), flags=re.MULTILINE)
                     
                     for i, band in enumerate(cleaned_band_names.split('\n')):
                         if band.strip():
@@ -453,7 +453,7 @@ async def imageurl(interaction: discord.Interaction, url: str):
                 
                 # Add formatted dates - no extra line break
                 # Remove any headers like "Tour Dates:" or "Formatted Dates:"
-                cleaned_dates = re.sub(r'^(?i)(tour\s*dates?:?|formatted\s*dates?:?|dates?:?)\s*', '', formatted_dates.strip(), flags=re.MULTILINE)
+                cleaned_dates = re.sub(r'(?i)^(tour\s*dates?:?|formatted\s*dates?:?|dates?:?)\s*', '', formatted_dates.strip(), flags=re.MULTILINE)
                 combined_message += f"\n**Formatted Dates:**\n```\n{cleaned_dates}\n```"
                 
                 # Add disclaimer
