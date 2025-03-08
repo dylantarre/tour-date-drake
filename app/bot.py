@@ -229,10 +229,9 @@ async def dates(interaction: discord.Interaction, text: str):
                     else:
                         await interaction.followup.send(message)
                     
-            except discord.NotFound:
-                logger.error("Initial interaction expired")
-                return
-
+            except Exception as e:
+                logger.error(f"Error sending message: {str(e)}")
+                await interaction.followup.send(f"Error: {str(e)}")
     except asyncio.TimeoutError:
         logger.error("Request timed out")
         try:
@@ -374,7 +373,15 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
                             await interaction.followup.send(sub_message)
                     else:
                         await interaction.followup.send(message)
-{{ ... }}
+            except Exception as e:
+                logger.error(f"Error sending message: {str(e)}")
+                await interaction.followup.send(f"Error: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error processing image: {str(e)}")
+        if not interaction.response.is_done():
+            await interaction.response.send_message(f"Error: {str(e)}")
+        else:
+            await interaction.followup.send(f"Error: {str(e)}")
 
 @client.tree.command(name="imageurl", description="Extract tour dates from an image URL")
 @app_commands.describe(
@@ -494,7 +501,15 @@ async def imageurl(interaction: discord.Interaction, url: str):
                             await interaction.followup.send(sub_message)
                     else:
                         await interaction.followup.send(message)
-{{ ... }}
+            except Exception as e:
+                logger.error(f"Error sending message: {str(e)}")
+                await interaction.followup.send(f"Error: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error processing image URL: {str(e)}")
+        if not interaction.response.is_done():
+            await interaction.response.send_message(f"Error: {str(e)}")
+        else:
+            await interaction.followup.send(f"Error: {str(e)}")
 
 @client.event
 async def on_ready():
