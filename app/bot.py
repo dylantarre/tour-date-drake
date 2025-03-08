@@ -207,7 +207,7 @@ async def dates(interaction: discord.Interaction, text: str):
                     
                     # Add disclaimer to the last chunk
                     if i == len(formatted_chunks) - 1:
-                        disclaimer = "\n\n*Note: Tour Date Drake is AI-powered and may make mistakes. Please verify important information.*"
+                        disclaimer = "\n\n*Tour Date Drake may make mistakes. Double check all info.*"
                         if len(message) + len(disclaimer) <= MAX_DISCORD_LENGTH:
                             message += disclaimer
                         else:
@@ -344,8 +344,8 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
                 combined_message += f"\n**Formatted Dates:**\n```\n{cleaned_dates}\n```"
                 
                 # Add disclaimer
-                combined_message += "\n\Tour Date Drake may make mistakes. Double check all info.*"
-ease verify important information                
+                combined_message += "\n\n*Tour Date Drake may make mistakes. Double check all info.*"
+                
                 # Split the combined message if it's too long
                 combined_chunks = split_message(combined_message)
                 
@@ -457,7 +457,7 @@ async def imageurl(interaction: discord.Interaction, url: str):
                 combined_message += f"\n**Formatted Dates:**\n```\n{cleaned_dates}\n```"
                 
                 # Add disclaimer
-                combined_message += "\n\Tour Date Drake may make mistakes. Double check all info.*"
+                combined_message += "\n\n*Tour Date Drake may make mistakes. Double check all info.*"
                 
                 # Split the combined message if it's too long
                 combined_chunks = split_message(combined_message)

@@ -1,0 +1,31 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    gcc \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first to leverage Docker cache
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY app app/
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV MAX_WORKERS=1
+ENV WORKER_CLASS=uvicorn.workers.UvicornWorker
+ENV TIMEOUT=300
+
+# Expose port
+EXPOSE 4343
+
+# Run the application with increased timeout and worker settings
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "4343", "--timeout-keep-alive", "300"] 
