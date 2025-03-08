@@ -1,6 +1,6 @@
 services:
   api:
-    build: .
+    image: dylantarre/tour-date-drake-api:latest
     ports:
       - "4343:4343"
     environment:
@@ -8,7 +8,7 @@ services:
       - SERVICE=api
 
   bot:
-    build: .
+    image: dylantarre/tour-date-drake:latest
     environment:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - DISCORD_TOKEN=${DISCORD_TOKEN}
