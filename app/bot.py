@@ -207,7 +207,7 @@ async def dates(interaction: discord.Interaction, text: str):
                     
                     # Add disclaimer to the last chunk
                     if i == len(formatted_chunks) - 1:
-                        disclaimer = "\nPlease double-check all info as Tour Date Drake can make mistakes."
+                        disclaimer = "\n\n*Note: Tour Date Drake is AI-powered and may make mistakes. Please verify important information.*"
                         if len(message) + len(disclaimer) <= MAX_DISCORD_LENGTH:
                             message += disclaimer
                         else:
@@ -343,6 +343,9 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
                 cleaned_dates = re.sub(r'^(?i)(tour\s*dates?:?|formatted\s*dates?:?|dates?:?)\s*', '', formatted_dates.strip(), flags=re.MULTILINE)
                 combined_message += f"\n**Formatted Dates:**\n```\n{cleaned_dates}\n```"
                 
+                # Add disclaimer
+                combined_message += "\n\n*Note: Tour Date Drakemay make mistakes. Please verify important information.*"
+                
                 # Split the combined message if it's too long
                 combined_chunks = split_message(combined_message)
                 
@@ -452,6 +455,9 @@ async def imageurl(interaction: discord.Interaction, url: str):
                 # Remove any headers like "Tour Dates:" or "Formatted Dates:"
                 cleaned_dates = re.sub(r'^(?i)(tour\s*dates?:?|formatted\s*dates?:?|dates?:?)\s*', '', formatted_dates.strip(), flags=re.MULTILINE)
                 combined_message += f"\n**Formatted Dates:**\n```\n{cleaned_dates}\n```"
+                
+                # Add disclaimer
+                combined_message += "\n\n*Note: Tour Date Drake is AI-powered and may make mistakes. Please verify important information.*"
                 
                 # Split the combined message if it's too long
                 combined_chunks = split_message(combined_message)
