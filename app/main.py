@@ -138,6 +138,8 @@ BAND NAME EXTRACTION:
 - If it's a festival or multi-artist show, list all artists/bands that are visible
 - **Format band names as an unordered list, with one band name per line, preceded by a bullet point or dash**
 - **Ensure band names use normal capitalization (Title Case), not ALL CAPS unless that's the official styling of the band name**
+- **DO NOT include headers like "Bands:" or "Artists:" in your output - just list the band names directly**
+- **DO NOT include section titles within your lists - the Discord bot will add these automatically**
 
 **EXAMPLES OF CORRECTLY FORMATTED BAND NAMES:**
 
@@ -166,7 +168,9 @@ Example 3 (Festival Lineup):
 • A$AP Rocky
 ```
 
-Your response should include both the formatted tour dates and the band names in separate sections."""
+Your response should include both the formatted tour dates and the band names in separate sections.
+
+**IMPORTANT: DO NOT include headers like "Tour Dates:" or "Dates:" in your output - just list the dates directly**
                             },
                             image_content
                         ]
@@ -327,6 +331,8 @@ BAND NAME EXTRACTION:
 - If it's a festival or multi-artist show, list all artists/bands that are mentioned
 - **Format band names as an unordered list, with one band name per line, preceded by a bullet point or dash**
 - **Ensure band names use normal capitalization (Title Case), not ALL CAPS unless that's the official styling of the band name**
+- **DO NOT include headers like "Bands:" or "Artists:" in your output - just list the band names directly**
+- **DO NOT include section titles within your lists - the Discord bot will add these automatically**
 
 **EXAMPLES OF CORRECTLY FORMATTED BAND NAMES:**
 
@@ -357,6 +363,7 @@ Example 3 (Festival Lineup):
 
 Your response should include both the formatted tour dates and the band names in separate sections.
 
+**IMPORTANT: DO NOT include headers like "Tour Dates:" or "Dates:" in your output - just list the dates directly**
 Here are the dates to format: {text}"""
                     }
                 ],

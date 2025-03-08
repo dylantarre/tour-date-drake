@@ -330,12 +330,27 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
                             clean_band = band.strip()
                             if clean_band.startswith('•') or clean_band.startswith('-') or clean_band.startswith('*'):
                                 clean_band = clean_band[1:].strip()
-                            band_list += f"• {clean_band}\n"
+                            
+                            # Skip header lines like "Bands:" or "Band Names:"
+                            if not (clean_band.lower().startswith("band") or 
+                                   clean_band.lower().startswith("artist") or 
+                                   clean_band.lower() == "bands:" or 
+                                   clean_band.lower() == "artists:"):
+                                band_list += f"• {clean_band}\n"
                     
                     combined_message += f"**Band Names:**\n```\n{band_list}```"
                 
                 # Add formatted dates - no extra line break
-                combined_message += f"\n**Formatted Dates:**\n```\n{formatted_dates}\n```"
+                # Remove any header lines from formatted dates
+                cleaned_dates = ""
+                for line in formatted_dates.split('\n'):
+                    if not (line.lower().startswith("tour date") or 
+                           line.lower().startswith("date") or 
+                           line.lower() == "tour dates:" or 
+                           line.lower() == "dates:"):
+                        cleaned_dates += line + "\n"
+                
+                combined_message += f"\n**Formatted Dates:**\n```\n{cleaned_dates}```"
                 
                 # Split the combined message if it's too long
                 combined_chunks = split_message(combined_message)
@@ -435,12 +450,27 @@ async def imageurl(interaction: discord.Interaction, url: str):
                             clean_band = band.strip()
                             if clean_band.startswith('•') or clean_band.startswith('-') or clean_band.startswith('*'):
                                 clean_band = clean_band[1:].strip()
-                            band_list += f"• {clean_band}\n"
+                            
+                            # Skip header lines like "Bands:" or "Band Names:"
+                            if not (clean_band.lower().startswith("band") or 
+                                   clean_band.lower().startswith("artist") or 
+                                   clean_band.lower() == "bands:" or 
+                                   clean_band.lower() == "artists:"):
+                                band_list += f"• {clean_band}\n"
                     
                     combined_message += f"**Band Names:**\n```\n{band_list}```"
                 
                 # Add formatted dates - no extra line break
-                combined_message += f"\n**Formatted Dates:**\n```\n{formatted_dates}\n```"
+                # Remove any header lines from formatted dates
+                cleaned_dates = ""
+                for line in formatted_dates.split('\n'):
+                    if not (line.lower().startswith("tour date") or 
+                           line.lower().startswith("date") or 
+                           line.lower() == "tour dates:" or 
+                           line.lower() == "dates:"):
+                        cleaned_dates += line + "\n"
+                
+                combined_message += f"\n**Formatted Dates:**\n```\n{cleaned_dates}```"
                 
                 # Split the combined message if it's too long
                 combined_chunks = split_message(combined_message)
