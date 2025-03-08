@@ -108,8 +108,12 @@ BAND NAME EXTRACTION:
 - Extract all band names featured on the poster
 - If it's a single artist/band tour, just list that artist/band
 - If it's a festival or multi-artist show, list all artists/bands that are visible
-- Format as a comma-separated list if there are multiple bands
-- Preserve the exact spelling and capitalization of band names as shown on the poster
+- **Format band names as an unordered list, with one band name per line, preceded by a bullet point or dash**
+- **Ensure band names use normal capitalization (Title Case), not ALL CAPS unless that's the official styling of the band name**
+- **For example:**
+  - Band Name One
+  - Band Name Two
+  - ACDC (if officially styled as all caps)
 
 Your response should include both the formatted tour dates and the band names in separate sections."""
                             },
@@ -242,8 +246,12 @@ BAND NAME EXTRACTION:
 - Extract all band names featured in the text
 - If it's a single artist/band tour, just list that artist/band
 - If it's a festival or multi-artist show, list all artists/bands that are mentioned
-- Format as a comma-separated list if there are multiple bands
-- Preserve the exact spelling and capitalization of band names as shown in the text
+- **Format band names as an unordered list, with one band name per line, preceded by a bullet point or dash**
+- **Ensure band names use normal capitalization (Title Case), not ALL CAPS unless that's the official styling of the band name**
+- **For example:**
+  - Band Name One
+  - Band Name Two
+  - ACDC (if officially styled as all caps)
 
 Your response should include both the formatted tour dates and the band names in separate sections.
 
