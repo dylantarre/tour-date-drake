@@ -322,7 +322,13 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
                 
                 # Add band names if available
                 if band_names:
-                    combined_message += f"**Band Names:**\n```\n{band_names}\n```\n\n"
+                    # Format band names as a list
+                    band_list = ""
+                    for i, band in enumerate(band_names.split('\n')):
+                        if band.strip():
+                            band_list += f"• {band.strip()}\n"
+                    
+                    combined_message += f"**Band Names:**\n```\n{band_list}```\n\n"
                 
                 # Add formatted dates
                 combined_message += f"**Formatted Dates:**\n```\n{formatted_dates}\n```"
@@ -417,7 +423,13 @@ async def imageurl(interaction: discord.Interaction, url: str):
                 
                 # Add band names if available
                 if band_names:
-                    combined_message += f"**Band Names:**\n```\n{band_names}\n```\n\n"
+                    # Format band names as a list
+                    band_list = ""
+                    for i, band in enumerate(band_names.split('\n')):
+                        if band.strip():
+                            band_list += f"• {band.strip()}\n"
+                    
+                    combined_message += f"**Band Names:**\n```\n{band_list}```\n\n"
                 
                 # Add formatted dates
                 combined_message += f"**Formatted Dates:**\n```\n{formatted_dates}\n```"
