@@ -2,6 +2,9 @@
 .env
 .env.*
 
+# Backup files
+*_backup.py
+
 # Python
 __pycache__/
 *.py[cod]
