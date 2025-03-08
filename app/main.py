@@ -86,7 +86,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
 FORMATTING RULES FOR TOUR DATES:
 - **ALWAYS use American date format MM/DD for ALL dates (even for European/international tours)**
 - **IMPORTANT: Convert any European format dates (DD/MM) to American format (MM/DD) in the output**
-- **For example: "07/03" in European format should be converted to "03/07" in American format (March 7th)**
+- **For example: "07/03" in European format should be converted to "03/07" in American format \(March 7th\)**
 - **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15 City, ST" not "06/15 - City, ST")**
 - **ABSOLUTELY NO DASHES in the final output**
 - **Always format as: MM/DD City, ST @ Venue (if venue is known)**
@@ -280,7 +280,7 @@ Please extract and format all tour dates and band names from this text using the
 FORMATTING RULES FOR TOUR DATES:
 - **ALWAYS use American date format MM/DD for ALL dates (even for European/international tours)**
 - **IMPORTANT: Convert any European format dates (DD/MM) to American format (MM/DD) in the output**
-- **For example: "07/03" in European format should be converted to "03/07" in American format (March 7th)**
+- **For example: "07/03" in European format should be converted to "03/07" in American format \(March 7th\)**
 - **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15 City, ST" not "06/15 - City, ST")**
 - **ABSOLUTELY NO DASHES in the final output**
 - **Always format as: MM/DD City, ST @ Venue (if venue is known)**
