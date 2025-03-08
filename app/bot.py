@@ -317,62 +317,29 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
             logger.info(f"Sending formatted response to Discord: {formatted_dates[:100]}...")
             
             try:
-                # If band names were extracted, display them
-                if band_names:
-                    band_chunks = split_message(band_names)
-                    for i, chunk in enumerate(band_chunks):
-                        if i == 0:
-                            message = f"**Band Names:**\n```\n{chunk}\n```"
-                        else:
-                            message = f"```\n(continued...)\n{chunk}\n```"
-                        
-                        # Double check length before sending
-                        if len(message) > MAX_DISCORD_LENGTH:
-                            logger.warning(f"Band names message too long ({len(message)} chars), splitting further")
-                            sub_chunks = split_message(chunk)
-                            for j, sub_chunk in enumerate(sub_chunks):
-                                if j == 0 and i == 0:
-                                    sub_message = f"**Band Names:**\n```\n{sub_chunk}\n```"
-                                else:
-                                    sub_message = f"```\n(continued...)\n{sub_chunk}\n```"
-                                await interaction.followup.send(sub_message)
-                        else:
-                            await interaction.followup.send(message)
+                # Create a combined message with both band names and formatted dates
+                combined_message = ""
                 
-                # Split and send formatted dates in chunks
-                formatted_chunks = split_message(formatted_dates)
-                for i, chunk in enumerate(formatted_chunks):
-                    # Calculate total message length including formatting
+                # Add band names if available
+                if band_names:
+                    combined_message += f"**Band Names:**\n```\n{band_names}\n```\n\n"
+                
+                # Add formatted dates
+                combined_message += f"**Formatted Dates:**\n```\n{formatted_dates}\n```"
+                
+                # Split the combined message if it's too long
+                combined_chunks = split_message(combined_message)
+                
+                # First send the original image back to the user
+                file = discord.File(BytesIO(image_bytes), filename=image.filename)
+                await interaction.followup.send(file=file)
+                
+                # Then send the combined message
+                for i, chunk in enumerate(combined_chunks):
                     if i == 0:
-                        # First chunk includes the header
-                        message = f"**Formatted Dates:**\n```\n{chunk}\n```"
+                        await interaction.followup.send(chunk)
                     else:
-                        message = f"```\n(continued...)\n{chunk}\n```"
-                    
-                    # Add disclaimer to the last chunk
-                    if i == len(formatted_chunks) - 1:
-                        disclaimer = "\nPlease double-check all info as Tour Date Drake can make mistakes."
-                        if len(message) + len(disclaimer) <= MAX_DISCORD_LENGTH:
-                            message += disclaimer
-                        else:
-                            # If adding disclaimer would exceed limit, send it separately
-                            await interaction.followup.send(message)
-                            await interaction.followup.send(disclaimer)
-                            continue
-                        
-                    # Double check length before sending
-                    if len(message) > MAX_DISCORD_LENGTH:
-                        logger.warning(f"Message too long ({len(message)} chars), splitting further")
-                        sub_chunks = split_message(chunk)
-                        for j, sub_chunk in enumerate(sub_chunks):
-                            if j == 0 and i == 0:
-                                # First sub-chunk of first chunk includes header
-                                sub_message = f"**Formatted Dates:**\n```\n{sub_chunk}\n```"
-                            else:
-                                sub_message = f"```\n(continued...)\n{sub_chunk}\n```"
-                            await interaction.followup.send(sub_message)
-                    else:
-                        await interaction.followup.send(message)
+                        await interaction.followup.send(f"```\n(continued...)\n{chunk}\n```")
             except Exception as e:
                 logger.error(f"Error sending message: {str(e)}")
                 await interaction.followup.send(f"Error: {str(e)}")
@@ -445,62 +412,28 @@ async def imageurl(interaction: discord.Interaction, url: str):
             logger.info(f"Sending formatted response to Discord: {formatted_dates[:100]}...")
             
             try:
-                # If band names were extracted, display them
-                if band_names:
-                    band_chunks = split_message(band_names)
-                    for i, chunk in enumerate(band_chunks):
-                        if i == 0:
-                            message = f"**Band Names:**\n```\n{chunk}\n```"
-                        else:
-                            message = f"```\n(continued...)\n{chunk}\n```"
-                        
-                        # Double check length before sending
-                        if len(message) > MAX_DISCORD_LENGTH:
-                            logger.warning(f"Band names message too long ({len(message)} chars), splitting further")
-                            sub_chunks = split_message(chunk)
-                            for j, sub_chunk in enumerate(sub_chunks):
-                                if j == 0 and i == 0:
-                                    sub_message = f"**Band Names:**\n```\n{sub_chunk}\n```"
-                                else:
-                                    sub_message = f"```\n(continued...)\n{sub_chunk}\n```"
-                                await interaction.followup.send(sub_message)
-                        else:
-                            await interaction.followup.send(message)
+                # Create a combined message with both band names and formatted dates
+                combined_message = ""
                 
-                # Split and send formatted dates in chunks
-                formatted_chunks = split_message(formatted_dates)
-                for i, chunk in enumerate(formatted_chunks):
-                    # Calculate total message length including formatting
+                # Add band names if available
+                if band_names:
+                    combined_message += f"**Band Names:**\n```\n{band_names}\n```\n\n"
+                
+                # Add formatted dates
+                combined_message += f"**Formatted Dates:**\n```\n{formatted_dates}\n```"
+                
+                # Split the combined message if it's too long
+                combined_chunks = split_message(combined_message)
+                
+                # First send the image URL
+                await interaction.followup.send(f"**Original Image:** {url}")
+                
+                # Then send the combined message
+                for i, chunk in enumerate(combined_chunks):
                     if i == 0:
-                        # First chunk includes the header
-                        message = f"**Formatted Dates:**\n```\n{chunk}\n```"
+                        await interaction.followup.send(chunk)
                     else:
-                        message = f"```\n(continued...)\n{chunk}\n```"
-                    
-                    # Add disclaimer to the last chunk
-                    if i == len(formatted_chunks) - 1:
-                        disclaimer = "\nPlease double-check all info as Tour Date Drake can make mistakes."
-                        if len(message) + len(disclaimer) <= MAX_DISCORD_LENGTH:
-                            message += disclaimer
-                        else:
-                            # If adding disclaimer would exceed limit, send it separately
-                            await interaction.followup.send(message)
-                            await interaction.followup.send(disclaimer)
-                            continue
-                        
-                    # Double check length before sending
-                    if len(message) > MAX_DISCORD_LENGTH:
-                        logger.warning(f"Message too long ({len(message)} chars), splitting further")
-                        sub_chunks = split_message(chunk)
-                        for j, sub_chunk in enumerate(sub_chunks):
-                            if j == 0 and i == 0:
-                                # First sub-chunk of first chunk includes header
-                                sub_message = f"**Formatted Dates:**\n```\n{sub_chunk}\n```"
-                            else:
-                                sub_message = f"```\n(continued...)\n{sub_chunk}\n```"
-                            await interaction.followup.send(sub_message)
-                    else:
-                        await interaction.followup.send(message)
+                        await interaction.followup.send(f"```\n(continued...)\n{chunk}\n```")
             except Exception as e:
                 logger.error(f"Error sending message: {str(e)}")
                 await interaction.followup.send(f"Error: {str(e)}")
