@@ -1,8 +1,8 @@
 fastapi==0.104.1
 uvicorn==0.24.0
-python-multipart==0.0.7
+python-multipart==0.0.20
 openai>=1.14.0
 python-dotenv==1.0.1
 httpx>=0.26.0
 discord.py>=2.3.2
-slowapi==0.1.9 
+slowapi==0.1.9
