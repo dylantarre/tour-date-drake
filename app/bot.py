@@ -352,6 +352,9 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
                 
                 combined_message += f"\n**Formatted Dates:**\n```\n{cleaned_dates}```"
                 
+                # Add disclaimer at the end
+                combined_message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
+                
                 # Split the combined message if it's too long
                 combined_chunks = split_message(combined_message)
                 
@@ -471,6 +474,9 @@ async def imageurl(interaction: discord.Interaction, url: str):
                         cleaned_dates += line + "\n"
                 
                 combined_message += f"\n**Formatted Dates:**\n```\n{cleaned_dates}```"
+                
+                # Add disclaimer at the end
+                combined_message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
                 
                 # Split the combined message if it's too long
                 combined_chunks = split_message(combined_message)
