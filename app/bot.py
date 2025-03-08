@@ -139,6 +139,8 @@ async def dates(interaction: discord.Interaction, text: str):
                 result = await response.json()
 
             formatted_dates = result.get("formatted_dates", "Error: No dates found")
+            band_names = result.get("band_names", "")
+            
             if not formatted_dates or formatted_dates == "Error: No dates found":
                 await interaction.followup.send("I couldn't find any valid tour dates in your text. Please make sure you've provided text containing tour dates.")
                 return
@@ -169,6 +171,28 @@ async def dates(interaction: discord.Interaction, text: str):
                             await interaction.followup.send(sub_message)
                     else:
                         await interaction.followup.send(message)
+                
+                # If band names were extracted, display them
+                if band_names:
+                    band_chunks = split_message(band_names)
+                    for i, chunk in enumerate(band_chunks):
+                        if i == 0:
+                            message = f"**Band Names:**\n```\n{chunk}\n```"
+                        else:
+                            message = f"```\n(continued...)\n{chunk}\n```"
+                        
+                        # Double check length before sending
+                        if len(message) > MAX_DISCORD_LENGTH:
+                            logger.warning(f"Band names message too long ({len(message)} chars), splitting further")
+                            sub_chunks = split_message(chunk)
+                            for j, sub_chunk in enumerate(sub_chunks):
+                                if j == 0 and i == 0:
+                                    sub_message = f"**Band Names:**\n```\n{sub_chunk}\n```"
+                                else:
+                                    sub_message = f"```\n(continued...)\n{sub_chunk}\n```"
+                                await interaction.followup.send(sub_message)
+                        else:
+                            await interaction.followup.send(message)
                 
                 # Split and send formatted dates in chunks
                 formatted_chunks = split_message(formatted_dates)
@@ -201,14 +225,6 @@ async def dates(interaction: discord.Interaction, text: str):
                                 sub_message = f"**Formatted Dates:**\n```\n{sub_chunk}\n```"
                             else:
                                 sub_message = f"```\n(continued...)\n{sub_chunk}\n```"
-                            # Add disclaimer to the last sub-chunk of the last chunk
-                            if j == len(sub_chunks) - 1 and i == len(formatted_chunks) - 1:
-                                if len(sub_message) + len(disclaimer) <= MAX_DISCORD_LENGTH:
-                                    sub_message += disclaimer
-                                else:
-                                    await interaction.followup.send(sub_message)
-                                    await interaction.followup.send(disclaimer)
-                                    continue
                             await interaction.followup.send(sub_message)
                     else:
                         await interaction.followup.send(message)
@@ -233,26 +249,47 @@ async def dates(interaction: discord.Interaction, text: str):
 @client.tree.command(name="image", description="Extract tour dates from an image")
 async def image(interaction: discord.Interaction, image: discord.Attachment):
     try:
+        # Input validation
+        if not image:
+            await interaction.response.send_message("Error: Please provide an image containing tour dates.")
+            return
+            
+        if not image.content_type or not image.content_type.startswith('image/'):
+            await interaction.response.send_message("Error: The file you uploaded is not a valid image. Please upload an image file (JPEG, PNG, etc).")
+            return
+            
+        if image.size > 10 * 1024 * 1024:  # 10 MB limit
+            await interaction.response.send_message("Error: Image is too large. Please upload an image smaller than 10 MB.")
+            return
+
         # First respond that we're working on it
-        await interaction.response.defer(thinking=True, ephemeral=False)
+        try:
+            await interaction.response.defer(thinking=True, ephemeral=False)
+        except discord.errors.NotFound:
+            logger.error("Interaction not found - it may have timed out")
+            return
+        except discord.errors.HTTPException as e:
+            if e.code == 40060:  # Interaction already acknowledged
+                logger.warning("Interaction was already acknowledged")
+            else:
+                raise
+        
+        # Download the image
+        image_bytes = await image.read()
         
         async with aiohttp.ClientSession() as session:
-            # Process image
-            logger.info(f"Processing image: {image.filename}")
-            
-            # Download the image
-            image_data = await image.read()
-            
-            # Send to our API using proper multipart form
-            form = aiohttp.FormData()
-            form.add_field('file', 
-                          image_data,
+            # Create a FormData object
+            data = aiohttp.FormData()
+            data.add_field('file', 
+                          image_bytes,
                           filename=image.filename,
                           content_type=image.content_type)
             
+            # Send the image to our API
+            logger.info(f"Sending image to API: {image.filename} ({image.size} bytes)")
             async with session.post(
                 f"{API_URL}/format/image",
-                data=form,
+                data=data,
                 timeout=aiohttp.ClientTimeout(total=180)  # 3 minute timeout
             ) as response:
                 if response.status != 200:
@@ -263,138 +300,201 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
                     except:
                         error_detail = error_text
                     logger.error(f"API error response: {error_text}")
-                    await interaction.followup.send(f"Error: {error_detail}")
+                    try:
+                        await interaction.followup.send(f"Error: {error_detail}")
+                    except discord.NotFound:
+                        logger.error("Interaction expired during error handling")
                     return
+                    
                 result = await response.json()
-                logger.info(f"Parsed API response: {result}")
-
+            
             formatted_dates = result.get("formatted_dates", "Error: No dates found")
+            band_names = result.get("band_names", "")
+            
             if not formatted_dates or formatted_dates == "Error: No dates found":
-                logger.warning("No dates found in the image")
-                await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=image.filename))
-                await interaction.followup.send("I couldn't find any tour dates in this image. Please make sure the image contains clear tour date information.")
+                await interaction.followup.send("I couldn't find any valid tour dates in the image. Please make sure the image contains clearly visible tour dates.")
                 return
                 
-            logger.info(f"Sending formatted response to Discord: {formatted_dates}")
-            
-            # Split long messages
-            chunks = split_message(formatted_dates)
+            logger.info(f"Sending formatted response to Discord: {formatted_dates[:100]}...")
             
             try:
-                # Send first chunk as initial response with the image
-                await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=image.filename))
-                for i, chunk in enumerate(chunks):
-                    message = f"```\n{chunk}\n```"
-                    if i > 0:
-                        message = f"```\n(continued...)\n{chunk}\n```"
-                    if i == len(chunks) - 1:
-                        message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
-                    await interaction.followup.send(message)
-                    
-            except discord.NotFound:
-                logger.error("Interaction expired")
-                return
+                # If band names were extracted, display them
+                if band_names:
+                    band_chunks = split_message(band_names)
+                    for i, chunk in enumerate(band_chunks):
+                        if i == 0:
+                            message = f"**Band Names:**\n```\n{chunk}\n```"
+                        else:
+                            message = f"```\n(continued...)\n{chunk}\n```"
+                        
+                        # Double check length before sending
+                        if len(message) > MAX_DISCORD_LENGTH:
+                            logger.warning(f"Band names message too long ({len(message)} chars), splitting further")
+                            sub_chunks = split_message(chunk)
+                            for j, sub_chunk in enumerate(sub_chunks):
+                                if j == 0 and i == 0:
+                                    sub_message = f"**Band Names:**\n```\n{sub_chunk}\n```"
+                                else:
+                                    sub_message = f"```\n(continued...)\n{sub_chunk}\n```"
+                                await interaction.followup.send(sub_message)
+                        else:
+                            await interaction.followup.send(message)
                 
-    except asyncio.TimeoutError:
-        logger.error("Request timed out")
-        try:
-            await interaction.followup.send("Sorry, the request took too long to process. Please try again with a smaller image or check your internet connection.")
-        except discord.NotFound:
-            logger.error("Interaction expired during timeout")
-    except Exception as e:
-        logger.error(f"Error processing request: {str(e)}", exc_info=True)
-        try:
-            await interaction.followup.send("Sorry, something went wrong while processing your request. Please try again later.")
-        except discord.NotFound:
-            logger.error("Interaction expired during error handling")
+                # Split and send formatted dates in chunks
+                formatted_chunks = split_message(formatted_dates)
+                for i, chunk in enumerate(formatted_chunks):
+                    # Calculate total message length including formatting
+                    if i == 0:
+                        # First chunk includes the header
+                        message = f"**Formatted Dates:**\n```\n{chunk}\n```"
+                    else:
+                        message = f"```\n(continued...)\n{chunk}\n```"
+                    
+                    # Add disclaimer to the last chunk
+                    if i == len(formatted_chunks) - 1:
+                        disclaimer = "\nPlease double-check all info as Tour Date Drake can make mistakes."
+                        if len(message) + len(disclaimer) <= MAX_DISCORD_LENGTH:
+                            message += disclaimer
+                        else:
+                            # If adding disclaimer would exceed limit, send it separately
+                            await interaction.followup.send(message)
+                            await interaction.followup.send(disclaimer)
+                            continue
+                        
+                    # Double check length before sending
+                    if len(message) > MAX_DISCORD_LENGTH:
+                        logger.warning(f"Message too long ({len(message)} chars), splitting further")
+                        sub_chunks = split_message(chunk)
+                        for j, sub_chunk in enumerate(sub_chunks):
+                            if j == 0 and i == 0:
+                                # First sub-chunk of first chunk includes header
+                                sub_message = f"**Formatted Dates:**\n```\n{sub_chunk}\n```"
+                            else:
+                                sub_message = f"```\n(continued...)\n{sub_chunk}\n```"
+                            await interaction.followup.send(sub_message)
+                    else:
+                        await interaction.followup.send(message)
+{{ ... }}
 
 @client.tree.command(name="imageurl", description="Extract tour dates from an image URL")
 @app_commands.describe(
-    url="URL of the image to process (jpg, png, gif, webp)"
+    url="URL of an image containing tour dates"
 )
 async def imageurl(interaction: discord.Interaction, url: str):
     try:
+        # Input validation
+        if not url or not url.strip():
+            await interaction.response.send_message("Error: Please provide a valid image URL.")
+            return
+            
+        # Simple URL validation
+        if not url.startswith(('http://', 'https://')):
+            await interaction.response.send_message("Error: Invalid URL. Please provide a valid HTTP or HTTPS URL.")
+            return
+
         # First respond that we're working on it
-        await interaction.response.defer(thinking=True, ephemeral=False)
+        try:
+            await interaction.response.defer(thinking=True, ephemeral=False)
+        except discord.errors.NotFound:
+            logger.error("Interaction not found - it may have timed out")
+            return
+        except discord.errors.HTTPException as e:
+            if e.code == 40060:  # Interaction already acknowledged
+                logger.warning("Interaction was already acknowledged")
+            else:
+                raise
         
         async with aiohttp.ClientSession() as session:
-            # Download the image from URL
-            logger.info(f"Downloading image from URL: {url}")
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=60)) as response:
+            # Send the URL to our API
+            logger.info(f"Sending image URL to API: {url}")
+            async with session.post(
+                f"{API_URL}/format/image",
+                json={"url": url},
+                timeout=aiohttp.ClientTimeout(total=180)  # 3 minute timeout
+            ) as response:
                 if response.status != 200:
-                    raise Exception(f"Failed to download image: HTTP {response.status}")
-                
-                # Get content type and filename
-                content_type = response.headers.get('content-type', 'image/jpeg')
-                filename = url.split('/')[-1]
-                
-                # Download the image data
-                image_data = await response.read()
-                
-                # Send to API using the same format as successful image upload
-                form = aiohttp.FormData()
-                form.add_field('file',
-                             image_data,
-                             filename=filename,
-                             content_type=content_type)
-                
-                async with session.post(
-                    f"{API_URL}/format/image",
-                    data=form,
-                    timeout=aiohttp.ClientTimeout(total=180)  # 3 minute timeout
-                ) as api_response:
-                    if api_response.status != 200:
-                        error_text = await api_response.text()
-                        try:
-                            error_json = await api_response.json()
-                            error_detail = error_json.get('detail', 'Unknown error')
-                        except:
-                            error_detail = error_text
-                        logger.error(f"API error response: {error_text}")
+                    error_text = await response.text()
+                    try:
+                        error_json = await response.json()
+                        error_detail = error_json.get('detail', 'Unknown error')
+                    except:
+                        error_detail = error_text
+                    logger.error(f"API error response: {error_text}")
+                    try:
                         await interaction.followup.send(f"Error: {error_detail}")
-                        return
-                    result = await api_response.json()
-                    logger.info(f"Parsed API response: {result}")
-
+                    except discord.NotFound:
+                        logger.error("Interaction expired during error handling")
+                    return
+                    
+                result = await response.json()
+            
             formatted_dates = result.get("formatted_dates", "Error: No dates found")
+            band_names = result.get("band_names", "")
+            
             if not formatted_dates or formatted_dates == "Error: No dates found":
-                logger.warning("No dates found in the image")
-                await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=filename))
-                await interaction.followup.send("I couldn't find any tour dates in this image. Please make sure the image contains clear tour date information.")
+                await interaction.followup.send("I couldn't find any valid tour dates in the image. Please make sure the image contains clearly visible tour dates.")
                 return
                 
-            logger.info(f"Sending formatted response to Discord: {formatted_dates}")
-            
-            # Split long messages
-            chunks = split_message(formatted_dates)
+            logger.info(f"Sending formatted response to Discord: {formatted_dates[:100]}...")
             
             try:
-                # Send first chunk as initial response with the image
-                await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=filename))
-                for i, chunk in enumerate(chunks):
-                    message = f"```\n{chunk}\n```"
-                    if i > 0:
-                        message = f"```\n(continued...)\n{chunk}\n```"
-                    if i == len(chunks) - 1:
-                        message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
-                    await interaction.followup.send(message)
-                    
-            except discord.NotFound:
-                logger.error("Interaction expired")
-                return
+                # If band names were extracted, display them
+                if band_names:
+                    band_chunks = split_message(band_names)
+                    for i, chunk in enumerate(band_chunks):
+                        if i == 0:
+                            message = f"**Band Names:**\n```\n{chunk}\n```"
+                        else:
+                            message = f"```\n(continued...)\n{chunk}\n```"
+                        
+                        # Double check length before sending
+                        if len(message) > MAX_DISCORD_LENGTH:
+                            logger.warning(f"Band names message too long ({len(message)} chars), splitting further")
+                            sub_chunks = split_message(chunk)
+                            for j, sub_chunk in enumerate(sub_chunks):
+                                if j == 0 and i == 0:
+                                    sub_message = f"**Band Names:**\n```\n{sub_chunk}\n```"
+                                else:
+                                    sub_message = f"```\n(continued...)\n{sub_chunk}\n```"
+                                await interaction.followup.send(sub_message)
+                        else:
+                            await interaction.followup.send(message)
                 
-    except asyncio.TimeoutError:
-        logger.error("Request timed out")
-        try:
-            await interaction.followup.send("Sorry, the request took too long to process. Please try again with a smaller image or check your internet connection.")
-        except discord.NotFound:
-            logger.error("Interaction expired during timeout")
-    except Exception as e:
-        logger.error(f"Error processing request: {str(e)}", exc_info=True)
-        try:
-            await interaction.followup.send("Sorry, something went wrong while processing your request. Please try again later.")
-        except discord.NotFound:
-            logger.error("Interaction expired during error handling")
+                # Split and send formatted dates in chunks
+                formatted_chunks = split_message(formatted_dates)
+                for i, chunk in enumerate(formatted_chunks):
+                    # Calculate total message length including formatting
+                    if i == 0:
+                        # First chunk includes the header
+                        message = f"**Formatted Dates:**\n```\n{chunk}\n```"
+                    else:
+                        message = f"```\n(continued...)\n{chunk}\n```"
+                    
+                    # Add disclaimer to the last chunk
+                    if i == len(formatted_chunks) - 1:
+                        disclaimer = "\nPlease double-check all info as Tour Date Drake can make mistakes."
+                        if len(message) + len(disclaimer) <= MAX_DISCORD_LENGTH:
+                            message += disclaimer
+                        else:
+                            # If adding disclaimer would exceed limit, send it separately
+                            await interaction.followup.send(message)
+                            await interaction.followup.send(disclaimer)
+                            continue
+                        
+                    # Double check length before sending
+                    if len(message) > MAX_DISCORD_LENGTH:
+                        logger.warning(f"Message too long ({len(message)} chars), splitting further")
+                        sub_chunks = split_message(chunk)
+                        for j, sub_chunk in enumerate(sub_chunks):
+                            if j == 0 and i == 0:
+                                # First sub-chunk of first chunk includes header
+                                sub_message = f"**Formatted Dates:**\n```\n{sub_chunk}\n```"
+                            else:
+                                sub_message = f"```\n(continued...)\n{sub_chunk}\n```"
+                            await interaction.followup.send(sub_message)
+                    else:
+                        await interaction.followup.send(message)
+{{ ... }}
 
 @client.event
 async def on_ready():

@@ -74,16 +74,16 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are Tour Date Drake, a helpful assistant that formats tour dates."
+                        "content": "You are Tour Date Drake, a helpful assistant that formats tour dates and extracts band information."
                     },
                     {
                         "role": "user",
                         "content": [
                             {
                                 "type": "text",
-                                "text": """Please extract and format all tour dates from this image using these rules:
+                                "text": """Please extract and format all tour dates and band names from this image using these rules:
 
-FORMATTING RULES:
+FORMATTING RULES FOR TOUR DATES:
 - **ALWAYS use American date format MM/DD for ALL dates (even for European/international tours)**
 - **IMPORTANT: Convert any European format dates (DD/MM) to American format (MM/DD) in the output**
 - **For example: "07/03" in European format should be converted to "03/07" in American format (March 7th)**
@@ -101,7 +101,16 @@ FORMATTING RULES:
 - Remove any dashes, commas, or extra formatting from the original text
 - For long venue names, keep them concise if possible
 - **IMPORTANT: Preserve all informational notes, supporting act info, and venue details like "(NOTE)" or "* Supporting Band"**
-- If there are notes at the bottom of the list (like "* Supporting Band"), include them at the end of the output"""
+- If there are notes at the bottom of the list (like "* Supporting Band"), include them at the end of the output
+
+BAND NAME EXTRACTION:
+- Extract all band names featured on the poster
+- If it's a single artist/band tour, just list that artist/band
+- If it's a festival or multi-artist show, list all artists/bands that are visible
+- Format as a comma-separated list if there are multiple bands
+- Preserve the exact spelling and capitalization of band names as shown on the poster
+
+Your response should include both the formatted tour dates and the band names in separate sections."""
                             },
                             image_content
                         ]
@@ -138,7 +147,48 @@ FORMATTING RULES:
                 
             logger.info(f"Successfully extracted content: {content}")
             
-            return content
+            # Process the content to separate tour dates and band names
+            formatted_response = {
+                "formatted_dates": "",
+                "band_names": ""
+            }
+            
+            # Check if the content contains sections for both dates and bands
+            if "BAND" in content.upper() and ("TOUR DATES" in content.upper() or "DATES" in content.upper()):
+                # Try to split the content into sections
+                sections = content.split("\n\n")
+                for section in sections:
+                    if any(marker in section.upper() for marker in ["BAND", "ARTIST"]):
+                        formatted_response["band_names"] = section.strip()
+                    elif any(marker in section.upper() for marker in ["TOUR DATES", "DATES", "SCHEDULE"]):
+                        formatted_response["formatted_dates"] = section.strip()
+                
+                # If we couldn't find explicit sections, make a best effort
+                if not formatted_response["formatted_dates"] and not formatted_response["band_names"]:
+                    # Look for date patterns to separate content
+                    date_lines = []
+                    band_lines = []
+                    
+                    for line in content.split("\n"):
+                        # Check if line contains a date pattern (MM/DD)
+                        if re.search(r'\d{2}/\d{2}', line):
+                            date_lines.append(line)
+                        elif "BAND" in line.upper() or "ARTIST" in line.upper():
+                            band_lines.append(line)
+                    
+                    if date_lines:
+                        formatted_response["formatted_dates"] = "\n".join(date_lines)
+                    if band_lines:
+                        formatted_response["band_names"] = "\n".join(band_lines)
+                    
+                    # If we still don't have band names, assume the model didn't format properly
+                    if not formatted_response["band_names"] and not formatted_response["formatted_dates"]:
+                        formatted_response["formatted_dates"] = content
+            else:
+                # If no clear sections, assume it's all dates for backward compatibility
+                formatted_response["formatted_dates"] = content
+            
+            return formatted_response
             
         except Exception as e:
             if attempt < max_retries - 1:
@@ -160,13 +210,13 @@ async def process_text(client: OpenAI, text: str) -> str:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are Tour Date Drake, a helpful assistant that formats tour dates."
+                        "content": "You are Tour Date Drake, a helpful assistant that formats tour dates and extracts band information."
                     },
                     {
                         "role": "user",
-                        "content": f"""Please extract and format all tour dates from this text using these rules:
+                        "content": f"""Please extract and format all tour dates and band names from this text using these rules:
 
-FORMATTING RULES:
+FORMATTING RULES FOR TOUR DATES:
 - **ALWAYS use American date format MM/DD for ALL dates (even for European/international tours)**
 - **IMPORTANT: Convert any European format dates (DD/MM) to American format (MM/DD) in the output**
 - **For example: "07/03" in European format should be converted to "03/07" in American format (March 7th)**
@@ -185,6 +235,15 @@ FORMATTING RULES:
 - For long venue names, keep them concise if possible
 - **IMPORTANT: Preserve all informational notes, supporting act info, and venue details like "(NOTE)" or "* Supporting Band"**
 - If there are notes at the bottom of the list (like "* Supporting Band"), include them at the end of the output
+
+BAND NAME EXTRACTION:
+- Extract all band names featured in the text
+- If it's a single artist/band tour, just list that artist/band
+- If it's a festival or multi-artist show, list all artists/bands that are mentioned
+- Format as a comma-separated list if there are multiple bands
+- Preserve the exact spelling and capitalization of band names as shown in the text
+
+Your response should include both the formatted tour dates and the band names in separate sections.
 
 Here are the dates to format: {text}"""
                     }
@@ -208,9 +267,50 @@ Here are the dates to format: {text}"""
                 logger.error("Empty content in message")
                 raise ValueError("No content in AI service response")
                 
-            logger.info(f"Received response from model 'google/gemini-2.0-pro-exp-02-05:free': {content}")
+            logger.info(f"Successfully extracted content: {content}")
             
-            return content
+            # Process the content to separate tour dates and band names
+            formatted_response = {
+                "formatted_dates": "",
+                "band_names": ""
+            }
+            
+            # Check if the content contains sections for both dates and bands
+            if "BAND" in content.upper() and ("TOUR DATES" in content.upper() or "DATES" in content.upper()):
+                # Try to split the content into sections
+                sections = content.split("\n\n")
+                for section in sections:
+                    if any(marker in section.upper() for marker in ["BAND", "ARTIST"]):
+                        formatted_response["band_names"] = section.strip()
+                    elif any(marker in section.upper() for marker in ["TOUR DATES", "DATES", "SCHEDULE"]):
+                        formatted_response["formatted_dates"] = section.strip()
+                
+                # If we couldn't find explicit sections, make a best effort
+                if not formatted_response["formatted_dates"] and not formatted_response["band_names"]:
+                    # Look for date patterns to separate content
+                    date_lines = []
+                    band_lines = []
+                    
+                    for line in content.split("\n"):
+                        # Check if line contains a date pattern (MM/DD)
+                        if re.search(r'\d{2}/\d{2}', line):
+                            date_lines.append(line)
+                        elif "BAND" in line.upper() or "ARTIST" in line.upper():
+                            band_lines.append(line)
+                    
+                    if date_lines:
+                        formatted_response["formatted_dates"] = "\n".join(date_lines)
+                    if band_lines:
+                        formatted_response["band_names"] = "\n".join(band_lines)
+                    
+                    # If we still don't have band names, assume the model didn't format properly
+                    if not formatted_response["band_names"] and not formatted_response["formatted_dates"]:
+                        formatted_response["formatted_dates"] = content
+            else:
+                # If no clear sections, assume it's all dates for backward compatibility
+                formatted_response["formatted_dates"] = content
+            
+            return formatted_response
             
         except Exception as e:
             if attempt < max_retries - 1:
@@ -223,18 +323,18 @@ Here are the dates to format: {text}"""
 class TextRequest(BaseModel):
     text: str
 
-@app.post("/format/text")
-@limiter.limit("20/minute")  # Rate limit: 20 requests per minute
+@app.post("/format/text", response_model=dict)
+@limiter.limit("10/minute")
 async def format_text(request: Request, text_request: TextRequest):
     try:
-        logger.info(f"Received text request: {text_request.text[:100]}...")
         client = init_openai_client()
         result = await process_text(client, text_request.text)
-        logger.info(f"Returning formatted result: {result}")
-        return {"formatted_dates": result}
+        return result
+    except HTTPException as e:
+        raise e
     except Exception as e:
         logger.error(f"Error processing text: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error processing text: {str(e)}")
 
 @app.post("/format/image")
 @limiter.limit("10/minute")  # Rate limit: 10 requests per minute
@@ -295,7 +395,7 @@ async def format_image(request: Request, file: UploadFile):
                 del data_url
             
         logger.info("Successfully processed image")
-        return {"formatted_dates": result}
+        return result
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -307,7 +407,7 @@ async def format_image(request: Request, file: UploadFile):
 @app.on_event("startup")
 async def startup_event():
     logger.info("Starting Tour Date Drake API with the following limits:")
-    logger.info("- /format/text: 20 requests per minute")
+    logger.info("- /format/text: 10 requests per minute")
     logger.info("- /format/image: 10 requests per minute")
     logger.info(f"- Maximum request size: {MAX_REQUEST_SIZE / (1024 * 1024 * 1024):.1f}GB")
     logger.info(f"- Large file warning threshold: {LARGE_FILE_THRESHOLD / (1024 * 1024 * 1024):.1f}GB") 

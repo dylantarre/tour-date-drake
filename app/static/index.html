@@ -474,7 +474,7 @@
             </p>
         </div>
 
-        <button onclick="parseDates()" id="parse-button">Parse Tour Dates</button>
+        <button onclick="handleDirectApiSubmit(event)" id="parse-button">Parse Tour Dates</button>
 
         <div class="result-container" style="display: none;">
             <div class="result"></div>
@@ -786,6 +786,13 @@
 
                 console.log('Final formatted response:', formattedResponse);  // Debug log
                 resultDiv.innerHTML = marked.parse(formattedResponse);
+
+                // Add band names if available
+                const data = JSON.parse(fullResponse);
+                if (data.band_names && data.band_names.trim()) {
+                    const bandNamesHtml = `<h2>Band Names</h2><pre>${data.band_names}</pre>`;
+                    resultDiv.innerHTML = bandNamesHtml + resultDiv.innerHTML;
+                }
             } catch (error) {
                 console.error('Error:', error);  // Debug log
                 resultDiv.innerHTML = `Error: ${error.message}`;
@@ -797,6 +804,226 @@
                 button.innerHTML = 'Parse Tour Dates';
             }
         }
+
+        // Direct API handler for the updated endpoints
+        async function handleDirectApiSubmit(event) {
+            event.preventDefault();
+            
+            const resultContainer = document.querySelector('.result-container');
+            const resultDiv = document.querySelector('.result');
+            const button = document.getElementById('parse-button');
+            
+            // Show loading state
+            button.disabled = true;
+            button.innerHTML = '<span class="loading"></span>Processing...';
+            resultDiv.innerHTML = `
+                <div class="wave-loader">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-text">Processing your request...</div>
+                </div>
+            `;
+            resultContainer.style.display = 'block';
+            
+            try {
+                let response;
+                const activeTab = document.querySelector('.tab.active').dataset.input;
+                const outputFormat = document.getElementById('output-format').value;
+                const model = document.getElementById('model').value;
+                
+                if (activeTab === 'text') {
+                    const text = document.getElementById('text-content').value.trim();
+                    if (!text) {
+                        throw new Error('Please enter some text containing tour dates.');
+                    }
+                    
+                    response = await fetch('/parse_tour_dates', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            text_input: text,
+                            output_format: outputFormat,
+                            model: model
+                        }),
+                    });
+                } else if (activeTab === 'url') {
+                    const url = document.getElementById('image-url').value.trim();
+                    if (!url) {
+                        throw new Error('Please enter an image URL.');
+                    }
+                    
+                    response = await fetch('/parse_tour_dates', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            image_url: url,
+                            output_format: outputFormat,
+                            model: model
+                        }),
+                    });
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: `Server error: ${response.status}` }));
+                    throw new Error(errorData.detail || 'Failed to process the request.');
+                }
+                
+                // Handle streaming response
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullResponse = '';
+                let lastChunk = '';
+                
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) {
+                        // Process any remaining data in lastChunk
+                        if (lastChunk) {
+                            try {
+                                const data = JSON.parse(lastChunk.slice(6));  // Remove "data: " prefix
+                                if (data.choices?.[0]?.delta?.content) {
+                                    fullResponse += data.choices[0].delta.content;
+                                }
+                            } catch (e) {
+                                console.warn('Error processing final chunk:', e);
+                            }
+                        }
+                        break;
+                    }
+                    
+                    const text = decoder.decode(value);
+                    console.log('Received raw chunk:', text);
+                    
+                    // Combine with any leftover data from last chunk
+                    const combinedText = lastChunk + text;
+                    const lines = combinedText.split('\n');
+                    
+                    // The last line might be incomplete, save it for next time
+                    lastChunk = lines[lines.length - 1];
+                    
+                    // Process all complete lines
+                    for (let i = 0; i < lines.length - 1; i++) {
+                        const line = lines[i].trim();
+                        if (!line) continue;
+                        
+                        console.log('Processing line:', line);
+                        
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));  // Remove "data: " prefix
+                                console.log('Parsed data:', data);
+                                
+                                if (data.choices?.[0]?.delta?.content) {
+                                    const content = data.choices[0].delta.content;
+                                    console.log('Content chunk:', content);
+                                    fullResponse += content;
+                                    
+                                    // Update display with current progress
+                                    const formattedContent = fullResponse
+                                        .replace(/\n/g, '  \n')  // Add markdown line breaks
+                                        .replace(/^[-*]\s/gm, '• ');  // Convert list markers to bullets
+                                    
+                                    resultDiv.innerHTML = marked.parse(formattedContent);
+                                }
+                                
+                                if (data.choices?.[0]?.finish_reason === 'stop') {
+                                    console.log('Received stop signal');
+                                    break;
+                                }
+                            } catch (e) {
+                                console.warn('Error processing line:', e, 'Line:', line);
+                                continue;
+                            }
+                        } else if (line.startsWith('error: ')) {
+                            const errorMsg = line.slice(7);
+                            console.error('Stream error:', errorMsg);
+                            throw new Error(errorMsg);
+                        }
+                    }
+                }
+                
+                console.log('Final full response:', fullResponse);
+                
+                if (!fullResponse.trim()) {
+                    throw new Error('No content received from the model');
+                }
+                
+                // Try to parse the response as JSON
+                let responseData;
+                try {
+                    // Check if the response is JSON
+                    responseData = JSON.parse(fullResponse);
+                } catch (e) {
+                    // If not JSON, try to extract structured data from markdown
+                    console.log('Response is not JSON, extracting from markdown');
+                    responseData = {
+                        formatted_dates: '',
+                        band_names: ''
+                    };
+                    
+                    // Extract band names section if it exists
+                    const bandNamesMatch = fullResponse.match(/## Band Names\s*\n([\s\S]*?)(?:\n##|$)/i);
+                    if (bandNamesMatch && bandNamesMatch[1].trim()) {
+                        responseData.band_names = bandNamesMatch[1].trim();
+                    }
+                    
+                    // Extract formatted dates section if it exists
+                    const datesMatch = fullResponse.match(/## (?:Tour Dates|Formatted Dates)\s*\n([\s\S]*?)(?:\n##|$)/i);
+                    if (datesMatch && datesMatch[1].trim()) {
+                        responseData.formatted_dates = datesMatch[1].trim();
+                    } else {
+                        // If no explicit section, assume everything is dates
+                        responseData.formatted_dates = fullResponse.trim();
+                    }
+                }
+                
+                // Format the HTML output
+                let formattedHtml = '';
+                
+                // Add band names if available
+                if (responseData.band_names && responseData.band_names.trim()) {
+                    formattedHtml += `<h2>Band Names</h2><pre>${responseData.band_names}</pre>`;
+                }
+                
+                // Add formatted dates
+                if (responseData.formatted_dates && responseData.formatted_dates.trim()) {
+                    formattedHtml += `<h2>Formatted Dates</h2><pre>${responseData.formatted_dates}</pre>`;
+                } else {
+                    formattedHtml += `<h2>Result</h2><pre>No tour dates found</pre>`;
+                }
+                
+                // Add disclaimer
+                formattedHtml += `<p class="disclaimer">Please double-check all info as Tour Date Drake can make mistakes.</p>`;
+                
+                resultDiv.innerHTML = formattedHtml;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `<div class="error-message">${error.message || 'An unexpected error occurred.'}</div>`;
+                resultDiv.className = 'result error';
+            } finally {
+                // Reset button state
+                button.disabled = false;
+                button.innerHTML = 'Parse Tour Dates';
+            }
+        }
+
+        // Initialize event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up the direct API handler for the parse button
+            document.getElementById('parse-button').addEventListener('click', function(e) {
+                e.preventDefault();
+                // Use the direct API handler instead of parseDates
+                handleDirectApiSubmit(e);
+            });
+        });
     </script>
 </body>
 </html>
