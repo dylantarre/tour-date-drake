@@ -104,16 +104,67 @@ FORMATTING RULES FOR TOUR DATES:
 - **IMPORTANT: Preserve all informational notes, supporting act info, and venue details like "(NOTE)" or "* Supporting Band"**
 - If there are notes at the bottom of the list (like "* Supporting Band"), include them at the end of the output
 
+**EXAMPLES OF CORRECTLY FORMATTED TOUR DATES:**
+
+Example 1 (US Tour):
+```
+05/15 New York, NY @ Madison Square Garden
+05/17 Boston, MA @ TD Garden
+05/19 Philadelphia, PA @ Wells Fargo Center
+05/22 Chicago, IL @ United Center
+05/24 Los Angeles, CA @ The Forum
+```
+
+Example 2 (European Tour with Notes):
+```
+06/10 London, UK @ O2 Arena
+06/12 Paris, FR @ AccorHotels Arena
+06/14 Berlin, DE @ Mercedes-Benz Arena
+06/16 Amsterdam, NL @ Ziggo Dome
+06/18 Stockholm, SE @ Ericsson Globe
+* Support act: The Opening Band
+```
+
+Example 3 (Festival Appearances):
+```
+07/04 Milwaukee, WI @ Summerfest
+07/10 Quebec City, QC @ Festival d'été de Québec
+07/15 Louisville, KY @ Forecastle Festival
+```
+
 BAND NAME EXTRACTION:
 - Extract all band names featured on the poster
 - If it's a single artist/band tour, just list that artist/band
 - If it's a festival or multi-artist show, list all artists/bands that are visible
 - **Format band names as an unordered list, with one band name per line, preceded by a bullet point or dash**
 - **Ensure band names use normal capitalization (Title Case), not ALL CAPS unless that's the official styling of the band name**
-- **For example:**
-  - Band Name One
-  - Band Name Two
-  - ACDC (if officially styled as all caps)
+
+**EXAMPLES OF CORRECTLY FORMATTED BAND NAMES:**
+
+Example 1 (Single Artist Tour):
+```
+• Taylor Swift
+```
+
+Example 2 (Multiple Bands):
+```
+• Foo Fighters
+• The Killers
+• Paramore
+• Twenty One Pilots
+• CHVRCHES
+```
+
+Example 3 (Festival Lineup):
+```
+• Red Hot Chili Peppers
+• LCD Soundsystem
+• Kendrick Lamar
+• Florence + The Machine
+• Tame Impala
+• ODESZA
+• A$AP Rocky
+```
 
 Your response should include both the formatted tour dates and the band names in separate sections."""
                             },
@@ -242,16 +293,67 @@ FORMATTING RULES FOR TOUR DATES:
 - **IMPORTANT: Preserve all informational notes, supporting act info, and venue details like "(NOTE)" or "* Supporting Band"**
 - If there are notes at the bottom of the list (like "* Supporting Band"), include them at the end of the output
 
+**EXAMPLES OF CORRECTLY FORMATTED TOUR DATES:**
+
+Example 1 (US Tour):
+```
+05/15 New York, NY @ Madison Square Garden
+05/17 Boston, MA @ TD Garden
+05/19 Philadelphia, PA @ Wells Fargo Center
+05/22 Chicago, IL @ United Center
+05/24 Los Angeles, CA @ The Forum
+```
+
+Example 2 (European Tour with Notes):
+```
+06/10 London, UK @ O2 Arena
+06/12 Paris, FR @ AccorHotels Arena
+06/14 Berlin, DE @ Mercedes-Benz Arena
+06/16 Amsterdam, NL @ Ziggo Dome
+06/18 Stockholm, SE @ Ericsson Globe
+* Support act: The Opening Band
+```
+
+Example 3 (Festival Appearances):
+```
+07/04 Milwaukee, WI @ Summerfest
+07/10 Quebec City, QC @ Festival d'été de Québec
+07/15 Louisville, KY @ Forecastle Festival
+```
+
 BAND NAME EXTRACTION:
 - Extract all band names featured in the text
 - If it's a single artist/band tour, just list that artist/band
 - If it's a festival or multi-artist show, list all artists/bands that are mentioned
 - **Format band names as an unordered list, with one band name per line, preceded by a bullet point or dash**
 - **Ensure band names use normal capitalization (Title Case), not ALL CAPS unless that's the official styling of the band name**
-- **For example:**
-  - Band Name One
-  - Band Name Two
-  - ACDC (if officially styled as all caps)
+
+**EXAMPLES OF CORRECTLY FORMATTED BAND NAMES:**
+
+Example 1 (Single Artist Tour):
+```
+• Taylor Swift
+```
+
+Example 2 (Multiple Bands):
+```
+• Foo Fighters
+• The Killers
+• Paramore
+• Twenty One Pilots
+• CHVRCHES
+```
+
+Example 3 (Festival Lineup):
+```
+• Red Hot Chili Peppers
+• LCD Soundsystem
+• Kendrick Lamar
+• Florence + The Machine
+• Tame Impala
+• ODESZA
+• A$AP Rocky
+```
 
 Your response should include both the formatted tour dates and the band names in separate sections.
 
