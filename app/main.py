@@ -90,7 +90,7 @@ FORMATTING RULES FOR TOUR DATES:
 - **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15 City, ST" not "06/15 - City, ST")**
 - **ABSOLUTELY NO DASHES in the final output**
 - **Always format as: MM/DD City, ST @ Venue (if venue is known)**
-- City and Venue names should have normal capitalization (e.g., "Hamburg" not "HAMBURG")
+- City and Venue should be in Title Case (capitalize first letter of each word)
 - **IMPORTANT: Venue names must ALWAYS be in Title Case (e.g., "The Fillmore" not "THE FILLMORE" or "the fillmore")**
 - If venues are listed separately, match them to the correct dates. If a venue cannot be matched, omit it.
 - For US states, ST is the state code (e.g., NY, CA)
@@ -274,7 +274,8 @@ async def process_text(client: OpenAI, text: str) -> str:
                     },
                     {
                         "role": "user",
-                        "content": f"""Please extract and format all tour dates and band names from this text using these rules:
+                        "content": f"""
+Please extract and format all tour dates and band names from this text using these rules:
 
 FORMATTING RULES FOR TOUR DATES:
 - **ALWAYS use American date format MM/DD for ALL dates (even for European/international tours)**
@@ -283,7 +284,7 @@ FORMATTING RULES FOR TOUR DATES:
 - **Date format must be MM/DD without ANY dashes or hyphens (e.g., "06/15 City, ST" not "06/15 - City, ST")**
 - **ABSOLUTELY NO DASHES in the final output**
 - **Always format as: MM/DD City, ST @ Venue (if venue is known)**
-- City and Venue names should have normal capitalization (e.g., "Hamburg" not "HAMBURG")
+- City and Venue should be in Title Case (capitalize first letter of each word)
 - **IMPORTANT: Venue names must ALWAYS be in Title Case (e.g., "The Fillmore" not "THE FILLMORE" or "the fillmore")**
 - If venues are listed separately, match them to the correct dates. If a venue cannot be matched, omit it.
 - For US states, ST is the state code (e.g., NY, CA)
@@ -364,7 +365,8 @@ Example 3 (Festival Lineup):
 Your response should include both the formatted tour dates and the band names in separate sections.
 
 **IMPORTANT: DO NOT include headers like "Tour Dates:" or "Dates:" in your output - just list the dates directly**
-Here are the dates to format: {text}"""
+Here are the dates to format: {text}
+"""
                     }
                 ],
                 max_tokens=2000
