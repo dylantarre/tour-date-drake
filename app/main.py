@@ -91,6 +91,7 @@ FORMATTING RULES FOR TOUR DATES:
 - **ABSOLUTELY NO DASHES in the final output**
 - **Always format as: MM/DD City, ST @ Venue (if venue is known)**
 - City and Venue names should have normal capitalization (e.g., "Hamburg" not "HAMBURG")
+- **IMPORTANT: Venue names must ALWAYS be in Title Case (e.g., "The Fillmore" not "THE FILLMORE" or "the fillmore")**
 - If venues are listed separately, match them to the correct dates. If a venue cannot be matched, omit it.
 - For US states, ST is the state code (e.g., NY, CA)
 - For countries, ST is the country code (e.g., DE, UK)
@@ -224,6 +225,7 @@ FORMATTING RULES FOR TOUR DATES:
 - **ABSOLUTELY NO DASHES in the final output**
 - **Always format as: MM/DD City, ST @ Venue (if venue is known)**
 - City and Venue names should have normal capitalization (e.g., "Hamburg" not "HAMBURG")
+- **IMPORTANT: Venue names must ALWAYS be in Title Case (e.g., "The Fillmore" not "THE FILLMORE" or "the fillmore")**
 - If venues are listed separately, match them to the correct dates. If a venue cannot be matched, omit it.
 - For US states, ST is the state code (e.g., NY, CA)
 - For countries, ST is the country code (e.g., DE, UK)
