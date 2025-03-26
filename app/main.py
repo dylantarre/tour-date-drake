@@ -59,7 +59,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"Processing image with model 'google/gemini-2.0-flash-thinking-exp:free' (attempt {attempt + 1}/{max_retries})")
+            logger.info(f"Processing image with model 'google/gemini-2.5-pro-exp-03-25:free' (attempt {attempt + 1}/{max_retries})")
             
             # For URLs, send the URL directly. For uploaded files, use the data URL as is
             image_content = {
@@ -70,7 +70,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
             }
             
             response = client.chat.completions.create(
-                model="google/gemini-2.0-flash-thinking-exp:free",
+                model="google/gemini-2.5-pro-exp-03-25:free",
                 messages=[
                     {
                         "role": "system",
@@ -110,35 +110,43 @@ FORMATTING RULES:
                 max_tokens=2000
             )
             
-            logger.info(f"Received response from model 'google/gemini-2.0-flash-thinking-exp:free': {response}")
+            logger.info(f"Received response from model 'google/gemini-2.5-pro-exp-03-25:free': {response}")
             
-            if hasattr(response, 'error'):
-                error_msg = response.error.get('message', 'Unknown error')
-                error_metadata = response.error.get('metadata', {})
-                raw_error = error_metadata.get('raw', '{}')
-                logger.error(f"OpenRouter error: {error_msg}, Raw error: {raw_error}")
-                raise HTTPException(status_code=500, detail=f"OpenRouter error: {error_msg}")
+            # Enhanced error logging
+            try:
+                # Log detailed response structure for debugging
+                logger.debug(f"Response type: {type(response)}")
+                logger.debug(f"Response attributes: {dir(response)}")
                 
-            if not response:
-                logger.error("Empty response from OpenRouter API")
-                raise HTTPException(status_code=500, detail="No response from AI service")
+                # Check if response is valid
+                if not hasattr(response, 'choices') or not response.choices:
+                    logger.error(f"No choices in response. Response type: {type(response)}")
+                    raise ValueError("Invalid response format from AI service")
+                    
+                if not response.choices[0] or not hasattr(response.choices[0], 'message'):
+                    logger.error(f"Invalid choice format. First choice: {response.choices[0]}")
+                    raise ValueError("Invalid response format from AI service")
+                    
+                content = response.choices[0].message.content
+                if not content:
+                    logger.error("Empty content in message")
+                    raise ValueError("No content in AI service response")
                 
-            if not hasattr(response, 'choices') or not response.choices:
-                logger.error(f"No choices in response. Response type: {type(response)}")
-                raise HTTPException(status_code=500, detail="Invalid response format from AI service")
+                logger.info(f"Received response from model 'google/gemini-2.5-pro-exp-03-25:free': {content}")
                 
-            if not response.choices[0] or not hasattr(response.choices[0], 'message'):
-                logger.error(f"Invalid choice format. First choice: {response.choices[0]}")
-                raise HTTPException(status_code=500, detail="Invalid response format from AI service")
-                
-            content = response.choices[0].message.content
-            if not content:
-                logger.error("Empty content in message")
-                raise HTTPException(status_code=500, detail="No content in AI service response")
-                
-            logger.info(f"Successfully extracted content: {content}")
-            
-            return content
+                return content
+            except AttributeError as ae:
+                logger.error(f"AttributeError parsing response: {ae}")
+                # Try alternative response format parsing if available
+                if hasattr(response, 'model_dump'):
+                    response_dict = response.model_dump()
+                    logger.debug(f"Response as dict: {response_dict}")
+                    if 'choices' in response_dict and response_dict['choices']:
+                        if 'message' in response_dict['choices'][0]:
+                            content = response_dict['choices'][0]['message'].get('content')
+                            if content:
+                                return content
+                raise ValueError(f"Failed to parse response format: {ae}")
             
         except Exception as e:
             if attempt < max_retries - 1:
@@ -154,9 +162,9 @@ async def process_text(client: OpenAI, text: str) -> str:
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"Processing text with google/gemini-2.0-pro-exp-02-05:free(attempt {attempt + 1}/{max_retries})")
+            logger.info(f"Processing text with google/gemini-2.5-pro-exp-03-25:free (attempt {attempt + 1}/{max_retries})")
             response = client.chat.completions.create(
-                model="google/gemini-2.0-pro-exp-02-05:free",
+                model="google/gemini-2.5-pro-exp-03-25:free",
                 messages=[
                     {
                         "role": "system",
@@ -194,23 +202,41 @@ Here are the dates to format: {text}"""
             
             logger.info(f"Raw response from model: {response}")
             
-            # Check if response is valid
-            if not hasattr(response, 'choices') or not response.choices:
-                logger.error(f"No choices in response. Response type: {type(response)}")
-                raise ValueError("Invalid response format from AI service")
+            # Enhanced error logging
+            try:
+                # Log detailed response structure for debugging
+                logger.debug(f"Response type: {type(response)}")
+                logger.debug(f"Response attributes: {dir(response)}")
                 
-            if not response.choices[0] or not hasattr(response.choices[0], 'message'):
-                logger.error(f"Invalid choice format. First choice: {response.choices[0]}")
-                raise ValueError("Invalid response format from AI service")
+                # Check if response is valid
+                if not hasattr(response, 'choices') or not response.choices:
+                    logger.error(f"No choices in response. Response type: {type(response)}")
+                    raise ValueError("Invalid response format from AI service")
+                    
+                if not response.choices[0] or not hasattr(response.choices[0], 'message'):
+                    logger.error(f"Invalid choice format. First choice: {response.choices[0]}")
+                    raise ValueError("Invalid response format from AI service")
+                    
+                content = response.choices[0].message.content
+                if not content:
+                    logger.error("Empty content in message")
+                    raise ValueError("No content in AI service response")
                 
-            content = response.choices[0].message.content
-            if not content:
-                logger.error("Empty content in message")
-                raise ValueError("No content in AI service response")
+                logger.info(f"Received response from model 'google/gemini-2.5-pro-exp-03-25:free': {content}")
                 
-            logger.info(f"Received response from model 'google/gemini-2.0-pro-exp-02-05:free': {content}")
-            
-            return content
+                return content
+            except AttributeError as ae:
+                logger.error(f"AttributeError parsing response: {ae}")
+                # Try alternative response format parsing if available
+                if hasattr(response, 'model_dump'):
+                    response_dict = response.model_dump()
+                    logger.debug(f"Response as dict: {response_dict}")
+                    if 'choices' in response_dict and response_dict['choices']:
+                        if 'message' in response_dict['choices'][0]:
+                            content = response_dict['choices'][0]['message'].get('content')
+                            if content:
+                                return content
+                raise ValueError(f"Failed to parse response format: {ae}")
             
         except Exception as e:
             if attempt < max_retries - 1:
