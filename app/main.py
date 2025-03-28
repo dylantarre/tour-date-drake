@@ -59,7 +59,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"Processing image with model 'google/gemini-2.5-pro-exp-03-25:free' (attempt {attempt + 1}/{max_retries})")
+            logger.info(f"Processing image with model 'google/gemini-2.0-flash-001' (attempt {attempt + 1}/{max_retries})")
             
             # For URLs, send the URL directly. For uploaded files, use the data URL as is
             image_content = {
@@ -70,7 +70,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
             }
             
             response = client.chat.completions.create(
-                model="google/gemini-2.5-pro-exp-03-25:free",
+                model="google/gemini-2.0-flash-001", # Stable model
                 messages=[
                     {
                         "role": "system",
@@ -110,7 +110,7 @@ FORMATTING RULES:
                 max_tokens=2000
             )
             
-            logger.info(f"Received response from model 'google/gemini-2.5-pro-exp-03-25:free': {response}")
+            logger.info(f"Received response from model 'google/gemini-2.0-flash-001': {response}")
             
             # Enhanced error logging
             try:
@@ -132,7 +132,7 @@ FORMATTING RULES:
                     logger.error("Empty content in message")
                     raise ValueError("No content in AI service response")
                 
-                logger.info(f"Received response from model 'google/gemini-2.5-pro-exp-03-25:free': {content}")
+                logger.info(f"Received response from model 'google/gemini-2.0-flash-001': {content}")
                 
                 return content
             except AttributeError as ae:
@@ -162,9 +162,9 @@ async def process_text(client: OpenAI, text: str) -> str:
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"Processing text with google/gemini-2.5-pro-exp-03-25:free (attempt {attempt + 1}/{max_retries})")
+            logger.info(f"Processing text with google/gemini-2.0-flash-001 (attempt {attempt + 1}/{max_retries})")
             response = client.chat.completions.create(
-                model="google/gemini-2.5-pro-exp-03-25:free",
+                model="google/gemini-2.0-flash-001", # Stable model
                 messages=[
                     {
                         "role": "system",
@@ -222,7 +222,7 @@ Here are the dates to format: {text}"""
                     logger.error("Empty content in message")
                     raise ValueError("No content in AI service response")
                 
-                logger.info(f"Received response from model 'google/gemini-2.5-pro-exp-03-25:free': {content}")
+                logger.info(f"Received response from model 'google/gemini-2.0-flash-001': {content}")
                 
                 return content
             except AttributeError as ae:
