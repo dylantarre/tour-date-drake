@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: tour-date-drake
+  annotations:
+    github.com/project-slug: dylantarre/tour-date-drake
+spec:
+  type: other
+  lifecycle: unknown
+  owner: dylantarre
