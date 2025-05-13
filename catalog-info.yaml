@@ -5,6 +5,8 @@ metadata:
   annotations:
     github.com/project-slug: dylantarre/tour-date-drake
     nexus-repository-manager/repository-slug: 'npm-hosted'
+    nexus-repository-manager/npm.package-name: '@dylantarre/tour-date-drake'
+    backstage.io/source-location: 'url:https://github.com/dylantarre/tour-date-drake'
 spec:
   type: other
   lifecycle: unknown
