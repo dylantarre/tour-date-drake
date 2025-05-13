@@ -4,6 +4,7 @@ metadata:
   name: tour-date-drake
   annotations:
     github.com/project-slug: dylantarre/tour-date-drake
+    nexus-repository-manager/repository-slug: 'npm-hosted'
 spec:
   type: other
   lifecycle: unknown
