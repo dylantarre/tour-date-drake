@@ -5,6 +5,7 @@ import asyncio
 import re
 from fastapi import FastAPI, HTTPException, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -37,6 +38,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files directory
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Configure request size limits (20 GB)
 MAX_REQUEST_SIZE = 20 * 1024 * 1024 * 1024  # 20 GB in bytes
@@ -101,6 +105,7 @@ FORMATTING RULES:
 - Remove any dashes, commas, or extra formatting from the original text
 - For long venue names, keep them concise if possible
 - **IMPORTANT: Preserve all informational notes, supporting act info, and venue details like "(NOTE)" or "* Supporting Band"**
+- **If a date, city, or venue has a special character, symbol, or note (such as *, %, †, etc.), make sure to keep that character at the end of that specific line, after the venue, not just at the end of the list. For example: "06/15 City, ST @ Venue *"**
 - If there are notes at the bottom of the list (like "* Supporting Band"), include them at the end of the output"""
                             },
                             image_content
@@ -192,6 +197,7 @@ FORMATTING RULES:
 - Remove any dashes, commas, or extra formatting from the original text
 - For long venue names, keep them concise if possible
 - **IMPORTANT: Preserve all informational notes, supporting act info, and venue details like "(NOTE)" or "* Supporting Band"**
+- **If a date, city, or venue has a special character, symbol, or note (such as *, %, †, etc.), make sure to keep that character at the end of that specific line, after the venue, not just at the end of the list. For example: "06/15 City, ST @ Venue *"**
 - If there are notes at the bottom of the list (like "* Supporting Band"), include them at the end of the output
 
 Here are the dates to format: {text}"""
