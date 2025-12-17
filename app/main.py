@@ -3,7 +3,7 @@ import base64
 import logging
 import asyncio
 import re
-from fastapi import FastAPI, HTTPException, UploadFile, Request
+from fastapi import FastAPI, HTTPException, UploadFile, Request, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -14,6 +14,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
+from typing import Optional
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -46,6 +47,52 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 MAX_REQUEST_SIZE = 20 * 1024 * 1024 * 1024  # 20 GB in bytes
 LARGE_FILE_THRESHOLD = 1 * 1024 * 1024 * 1024  # 1 GB in bytes
 
+# Load valid API keys from environment variable (comma-separated)
+def get_valid_api_keys() -> set:
+    """Get valid API keys from environment variable."""
+    api_keys_str = os.environ.get("API_KEYS", "")
+    if not api_keys_str:
+        logger.warning("No API_KEYS environment variable set. API will be unauthenticated!")
+        return set()
+    # Split by comma and strip whitespace
+    return {key.strip() for key in api_keys_str.split(",") if key.strip()}
+
+VALID_API_KEYS = get_valid_api_keys()
+
+async def verify_api_key(request: Request, x_api_key: Optional[str] = Header(None, alias="X-API-Key")):
+    """Verify API key from X-API-Key header."""
+    # If no API keys are configured, allow access (for backward compatibility during setup)
+    if not VALID_API_KEYS:
+        logger.warning("API_KEYS not configured - allowing unauthenticated access")
+        return True
+    
+    # Allow requests from internal Docker network (for bot service)
+    client_host = request.client.host if request.client else None
+    if client_host:
+        # Docker internal networks: 172.x.x.x, 10.x.x.x, or localhost
+        if (client_host.startswith("172.") or 
+            client_host.startswith("10.") or 
+            client_host == "127.0.0.1" or
+            client_host == "::1"):
+            logger.debug(f"Allowing internal request from {client_host}")
+            return True
+    
+    if not x_api_key:
+        logger.warning("Missing X-API-Key header")
+        raise HTTPException(
+            status_code=401,
+            detail="Missing API key. Please provide X-API-Key header."
+        )
+    
+    if x_api_key not in VALID_API_KEYS:
+        logger.warning(f"Invalid API key attempted: {x_api_key[:10]}...")
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid API key."
+        )
+    
+    return True
+
 def init_openai_client():
     return OpenAI(
         base_url="https://openrouter.ai/api/v1",
@@ -63,7 +110,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"Processing image with model 'google/gemini-2.0-flash-001' (attempt {attempt + 1}/{max_retries})")
+            logger.info(f"Processing image with model 'google/gemini-3-flash-preview' (attempt {attempt + 1}/{max_retries})")
             
             # For URLs, send the URL directly. For uploaded files, use the data URL as is
             image_content = {
@@ -74,7 +121,7 @@ async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -
             }
             
             response = client.chat.completions.create(
-                model="google/gemini-2.0-flash-001", # Stable model
+                model="google/gemini-3-flash-preview", # Upgraded model
                 messages=[
                     {
                         "role": "system",
@@ -115,7 +162,7 @@ FORMATTING RULES:
                 max_tokens=2000
             )
             
-            logger.info(f"Received response from model 'google/gemini-2.0-flash-001': {response}")
+            logger.info(f"Received response from model 'google/gemini-3-flash-preview': {response}")
             
             # Enhanced error logging
             try:
@@ -137,7 +184,7 @@ FORMATTING RULES:
                     logger.error("Empty content in message")
                     raise ValueError("No content in AI service response")
                 
-                logger.info(f"Received response from model 'google/gemini-2.0-flash-001': {content}")
+                logger.info(f"Received response from model 'google/gemini-3-flash-preview': {content}")
                 
                 return content
             except AttributeError as ae:
@@ -167,9 +214,9 @@ async def process_text(client: OpenAI, text: str) -> str:
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"Processing text with google/gemini-2.0-flash-001 (attempt {attempt + 1}/{max_retries})")
+            logger.info(f"Processing text with google/gemini-3-flash-preview (attempt {attempt + 1}/{max_retries})")
             response = client.chat.completions.create(
-                model="google/gemini-2.0-flash-001", # Stable model
+                model="google/gemini-3-flash-preview", # Upgraded model
                 messages=[
                     {
                         "role": "system",
@@ -228,7 +275,7 @@ Here are the dates to format: {text}"""
                     logger.error("Empty content in message")
                     raise ValueError("No content in AI service response")
                 
-                logger.info(f"Received response from model 'google/gemini-2.0-flash-001': {content}")
+                logger.info(f"Received response from model 'google/gemini-3-flash-preview': {content}")
                 
                 return content
             except AttributeError as ae:
@@ -257,7 +304,11 @@ class TextRequest(BaseModel):
 
 @app.post("/format/text")
 @limiter.limit("20/minute")  # Rate limit: 20 requests per minute
-async def format_text(request: Request, text_request: TextRequest):
+async def format_text(
+    request: Request, 
+    text_request: TextRequest,
+    api_key_verified: bool = Depends(verify_api_key)
+):
     try:
         logger.info(f"Received text request: {text_request.text[:100]}...")
         client = init_openai_client()
@@ -270,7 +321,11 @@ async def format_text(request: Request, text_request: TextRequest):
 
 @app.post("/format/image")
 @limiter.limit("10/minute")  # Rate limit: 10 requests per minute
-async def format_image(request: Request, file: UploadFile):
+async def format_image(
+    request: Request, 
+    file: UploadFile,
+    api_key_verified: bool = Depends(verify_api_key)
+):
     try:
         logger.info(f"Received file: {file.filename} ({file.content_type})")
         
@@ -342,4 +397,8 @@ async def startup_event():
     logger.info("- /format/text: 20 requests per minute")
     logger.info("- /format/image: 10 requests per minute")
     logger.info(f"- Maximum request size: {MAX_REQUEST_SIZE / (1024 * 1024 * 1024):.1f}GB")
-    logger.info(f"- Large file warning threshold: {LARGE_FILE_THRESHOLD / (1024 * 1024 * 1024):.1f}GB") 
+    logger.info(f"- Large file warning threshold: {LARGE_FILE_THRESHOLD / (1024 * 1024 * 1024):.1f}GB")
+    if VALID_API_KEYS:
+        logger.info(f"- API key authentication: ENABLED ({len(VALID_API_KEYS)} key(s) configured)")
+    else:
+        logger.warning("- API key authentication: DISABLED (set API_KEYS environment variable to enable)") 
