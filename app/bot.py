@@ -236,6 +236,9 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
         # First respond that we're working on it
         try:
             await interaction.response.defer(thinking=True, ephemeral=False)
+        except discord.errors.NotFound:
+            logger.warning("Interaction not found/expired, skipping")
+            return
         except discord.errors.HTTPException as e:
             if e.code == 40060:  # Interaction already acknowledged
                 logger.warning("Interaction already acknowledged, skipping")
@@ -323,6 +326,9 @@ async def imageurl(interaction: discord.Interaction, url: str):
         # First respond that we're working on it
         try:
             await interaction.response.defer(thinking=True, ephemeral=False)
+        except discord.errors.NotFound:
+            logger.warning("Interaction not found/expired, skipping")
+            return
         except discord.errors.HTTPException as e:
             if e.code == 40060:  # Interaction already acknowledged
                 logger.warning("Interaction already acknowledged, skipping")
