@@ -5,6 +5,8 @@ services:
       - "4343:4343"
     environment:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - AI_MODEL=${AI_MODEL}
+      - AI_MODEL_FALLBACK=${AI_MODEL_FALLBACK}
       - SERVICE=api
 
   bot:

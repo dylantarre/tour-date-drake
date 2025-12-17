@@ -93,6 +93,10 @@ async def verify_api_key(request: Request, x_api_key: Optional[str] = Header(Non
     
     return True
 
+# Model configuration - MUST be set via environment variables
+AI_MODEL = os.environ.get("AI_MODEL")
+AI_MODEL_FALLBACK = os.environ.get("AI_MODEL_FALLBACK")
+
 def init_openai_client():
     return OpenAI(
         base_url="https://openrouter.ai/api/v1",
@@ -107,21 +111,27 @@ def init_openai_client():
 async def process_image(client: OpenAI, image_data: str, is_url: bool = False) -> str:
     max_retries = 3
     retry_delay = 5  # seconds
-    
-    for attempt in range(max_retries):
-        try:
-            logger.info(f"Processing image with model 'google/gemini-3-flash-preview' (attempt {attempt + 1}/{max_retries})")
-            
-            # For URLs, send the URL directly. For uploaded files, use the data URL as is
-            image_content = {
-                "type": "image_url",
-                "image_url": {
-                    "url": image_data if is_url else image_data  # Use data URL directly
+    models_to_try = [m for m in [AI_MODEL, AI_MODEL_FALLBACK] if m]
+
+    if not models_to_try:
+        raise ValueError("No AI models configured. Set AI_MODEL environment variable.")
+
+    last_error = None
+    for model in models_to_try:
+        for attempt in range(max_retries):
+            try:
+                logger.info(f"Processing image with model '{model}' (attempt {attempt + 1}/{max_retries})")
+
+                # For URLs, send the URL directly. For uploaded files, use the data URL as is
+                image_content = {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": image_data if is_url else image_data  # Use data URL directly
+                    }
                 }
-            }
-            
-            response = client.chat.completions.create(
-                model="google/gemini-3-flash-preview", # Upgraded model
+
+                response = client.chat.completions.create(
+                    model=model,
                 messages=[
                     {
                         "role": "system",
@@ -162,7 +172,7 @@ FORMATTING RULES:
                 max_tokens=2000
             )
             
-            logger.info(f"Received response from model 'google/gemini-3-flash-preview': {response}")
+            logger.info(f"Received response from model '{model}': {response}")
             
             # Enhanced error logging
             try:
@@ -184,8 +194,8 @@ FORMATTING RULES:
                     logger.error("Empty content in message")
                     raise ValueError("No content in AI service response")
                 
-                logger.info(f"Received response from model 'google/gemini-3-flash-preview': {content}")
-                
+                logger.info(f"Received response from model '{model}': {content}")
+
                 return content
             except AttributeError as ae:
                 logger.error(f"AttributeError parsing response: {ae}")
@@ -199,24 +209,35 @@ FORMATTING RULES:
                             if content:
                                 return content
                 raise ValueError(f"Failed to parse response format: {ae}")
-            
-        except Exception as e:
-            if attempt < max_retries - 1:
-                logger.warning(f"Attempt {attempt + 1} failed, retrying in {retry_delay} seconds: {str(e)}")
-                await asyncio.sleep(retry_delay)
-                continue
-            logger.error(f"All retries failed: {str(e)}", exc_info=True)
-            raise
+
+            except Exception as e:
+                last_error = e
+                if attempt < max_retries - 1:
+                    logger.warning(f"Attempt {attempt + 1} failed with model '{model}', retrying in {retry_delay} seconds: {str(e)}")
+                    await asyncio.sleep(retry_delay)
+                    continue
+                else:
+                    logger.warning(f"All retries failed with model '{model}': {str(e)}")
+                    break  # Try next model
+
+    logger.error(f"All models failed: {str(last_error)}", exc_info=True)
+    raise last_error
 
 async def process_text(client: OpenAI, text: str) -> str:
     max_retries = 3
     retry_delay = 5  # seconds
-    
-    for attempt in range(max_retries):
-        try:
-            logger.info(f"Processing text with google/gemini-3-flash-preview (attempt {attempt + 1}/{max_retries})")
-            response = client.chat.completions.create(
-                model="google/gemini-3-flash-preview", # Upgraded model
+    models_to_try = [m for m in [AI_MODEL, AI_MODEL_FALLBACK] if m]
+
+    if not models_to_try:
+        raise ValueError("No AI models configured. Set AI_MODEL environment variable.")
+
+    last_error = None
+    for model in models_to_try:
+        for attempt in range(max_retries):
+            try:
+                logger.info(f"Processing text with model '{model}' (attempt {attempt + 1}/{max_retries})")
+                response = client.chat.completions.create(
+                    model=model,
                 messages=[
                     {
                         "role": "system",
@@ -275,8 +296,8 @@ Here are the dates to format: {text}"""
                     logger.error("Empty content in message")
                     raise ValueError("No content in AI service response")
                 
-                logger.info(f"Received response from model 'google/gemini-3-flash-preview': {content}")
-                
+                logger.info(f"Received response from model '{model}': {content}")
+
                 return content
             except AttributeError as ae:
                 logger.error(f"AttributeError parsing response: {ae}")
@@ -290,14 +311,19 @@ Here are the dates to format: {text}"""
                             if content:
                                 return content
                 raise ValueError(f"Failed to parse response format: {ae}")
-            
-        except Exception as e:
-            if attempt < max_retries - 1:
-                logger.warning(f"Attempt {attempt + 1} failed, retrying in {retry_delay} seconds: {str(e)}")
-                await asyncio.sleep(retry_delay)
-                continue
-            logger.error(f"All retries failed: {str(e)}", exc_info=True)
-            raise
+
+            except Exception as e:
+                last_error = e
+                if attempt < max_retries - 1:
+                    logger.warning(f"Attempt {attempt + 1} failed with model '{model}', retrying in {retry_delay} seconds: {str(e)}")
+                    await asyncio.sleep(retry_delay)
+                    continue
+                else:
+                    logger.warning(f"All retries failed with model '{model}': {str(e)}")
+                    break  # Try next model
+
+    logger.error(f"All models failed: {str(last_error)}", exc_info=True)
+    raise last_error
 
 class TextRequest(BaseModel):
     text: str
@@ -401,4 +427,14 @@ async def startup_event():
     if VALID_API_KEYS:
         logger.info(f"- API key authentication: ENABLED ({len(VALID_API_KEYS)} key(s) configured)")
     else:
-        logger.warning("- API key authentication: DISABLED (set API_KEYS environment variable to enable)") 
+        logger.warning("- API key authentication: DISABLED (set API_KEYS environment variable to enable)")
+
+    # Log model configuration
+    if AI_MODEL:
+        logger.info(f"- Primary AI model: {AI_MODEL}")
+    else:
+        logger.warning("- Primary AI model: NOT SET (AI_MODEL environment variable required)")
+    if AI_MODEL_FALLBACK:
+        logger.info(f"- Fallback AI model: {AI_MODEL_FALLBACK}")
+    else:
+        logger.info("- Fallback AI model: NOT SET (optional)") 
