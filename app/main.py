@@ -170,45 +170,45 @@ FORMATTING RULES:
                     }
                 ],
                 max_tokens=2000
-            )
-            
-            logger.info(f"Received response from model '{model}': {response}")
-            
-            # Enhanced error logging
-            try:
-                # Log detailed response structure for debugging
-                logger.debug(f"Response type: {type(response)}")
-                logger.debug(f"Response attributes: {dir(response)}")
-                
-                # Check if response is valid
-                if not hasattr(response, 'choices') or not response.choices:
-                    logger.error(f"No choices in response. Response type: {type(response)}")
-                    raise ValueError("Invalid response format from AI service")
-                    
-                if not response.choices[0] or not hasattr(response.choices[0], 'message'):
-                    logger.error(f"Invalid choice format. First choice: {response.choices[0]}")
-                    raise ValueError("Invalid response format from AI service")
-                    
-                content = response.choices[0].message.content
-                if not content:
-                    logger.error("Empty content in message")
-                    raise ValueError("No content in AI service response")
-                
-                logger.info(f"Received response from model '{model}': {content}")
+                )
 
-                return content
-            except AttributeError as ae:
-                logger.error(f"AttributeError parsing response: {ae}")
-                # Try alternative response format parsing if available
-                if hasattr(response, 'model_dump'):
-                    response_dict = response.model_dump()
-                    logger.debug(f"Response as dict: {response_dict}")
-                    if 'choices' in response_dict and response_dict['choices']:
-                        if 'message' in response_dict['choices'][0]:
-                            content = response_dict['choices'][0]['message'].get('content')
-                            if content:
-                                return content
-                raise ValueError(f"Failed to parse response format: {ae}")
+                logger.info(f"Received response from model '{model}': {response}")
+
+                # Enhanced error logging
+                try:
+                    # Log detailed response structure for debugging
+                    logger.debug(f"Response type: {type(response)}")
+                    logger.debug(f"Response attributes: {dir(response)}")
+
+                    # Check if response is valid
+                    if not hasattr(response, 'choices') or not response.choices:
+                        logger.error(f"No choices in response. Response type: {type(response)}")
+                        raise ValueError("Invalid response format from AI service")
+
+                    if not response.choices[0] or not hasattr(response.choices[0], 'message'):
+                        logger.error(f"Invalid choice format. First choice: {response.choices[0]}")
+                        raise ValueError("Invalid response format from AI service")
+
+                    content = response.choices[0].message.content
+                    if not content:
+                        logger.error("Empty content in message")
+                        raise ValueError("No content in AI service response")
+
+                    logger.info(f"Received response from model '{model}': {content}")
+
+                    return content
+                except AttributeError as ae:
+                    logger.error(f"AttributeError parsing response: {ae}")
+                    # Try alternative response format parsing if available
+                    if hasattr(response, 'model_dump'):
+                        response_dict = response.model_dump()
+                        logger.debug(f"Response as dict: {response_dict}")
+                        if 'choices' in response_dict and response_dict['choices']:
+                            if 'message' in response_dict['choices'][0]:
+                                content = response_dict['choices'][0]['message'].get('content')
+                                if content:
+                                    return content
+                    raise ValueError(f"Failed to parse response format: {ae}")
 
             except Exception as e:
                 last_error = e
@@ -272,45 +272,45 @@ Here are the dates to format: {text}"""
                     }
                 ],
                 max_tokens=2000
-            )
-            
-            logger.info(f"Raw response from model: {response}")
-            
-            # Enhanced error logging
-            try:
-                # Log detailed response structure for debugging
-                logger.debug(f"Response type: {type(response)}")
-                logger.debug(f"Response attributes: {dir(response)}")
-                
-                # Check if response is valid
-                if not hasattr(response, 'choices') or not response.choices:
-                    logger.error(f"No choices in response. Response type: {type(response)}")
-                    raise ValueError("Invalid response format from AI service")
-                    
-                if not response.choices[0] or not hasattr(response.choices[0], 'message'):
-                    logger.error(f"Invalid choice format. First choice: {response.choices[0]}")
-                    raise ValueError("Invalid response format from AI service")
-                    
-                content = response.choices[0].message.content
-                if not content:
-                    logger.error("Empty content in message")
-                    raise ValueError("No content in AI service response")
-                
-                logger.info(f"Received response from model '{model}': {content}")
+                )
 
-                return content
-            except AttributeError as ae:
-                logger.error(f"AttributeError parsing response: {ae}")
-                # Try alternative response format parsing if available
-                if hasattr(response, 'model_dump'):
-                    response_dict = response.model_dump()
-                    logger.debug(f"Response as dict: {response_dict}")
-                    if 'choices' in response_dict and response_dict['choices']:
-                        if 'message' in response_dict['choices'][0]:
-                            content = response_dict['choices'][0]['message'].get('content')
-                            if content:
-                                return content
-                raise ValueError(f"Failed to parse response format: {ae}")
+                logger.info(f"Raw response from model: {response}")
+
+                # Enhanced error logging
+                try:
+                    # Log detailed response structure for debugging
+                    logger.debug(f"Response type: {type(response)}")
+                    logger.debug(f"Response attributes: {dir(response)}")
+
+                    # Check if response is valid
+                    if not hasattr(response, 'choices') or not response.choices:
+                        logger.error(f"No choices in response. Response type: {type(response)}")
+                        raise ValueError("Invalid response format from AI service")
+
+                    if not response.choices[0] or not hasattr(response.choices[0], 'message'):
+                        logger.error(f"Invalid choice format. First choice: {response.choices[0]}")
+                        raise ValueError("Invalid response format from AI service")
+
+                    content = response.choices[0].message.content
+                    if not content:
+                        logger.error("Empty content in message")
+                        raise ValueError("No content in AI service response")
+
+                    logger.info(f"Received response from model '{model}': {content}")
+
+                    return content
+                except AttributeError as ae:
+                    logger.error(f"AttributeError parsing response: {ae}")
+                    # Try alternative response format parsing if available
+                    if hasattr(response, 'model_dump'):
+                        response_dict = response.model_dump()
+                        logger.debug(f"Response as dict: {response_dict}")
+                        if 'choices' in response_dict and response_dict['choices']:
+                            if 'message' in response_dict['choices'][0]:
+                                content = response_dict['choices'][0]['message'].get('content')
+                                if content:
+                                    return content
+                    raise ValueError(f"Failed to parse response format: {ae}")
 
             except Exception as e:
                 last_error = e
