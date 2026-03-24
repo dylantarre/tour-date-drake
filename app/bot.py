@@ -280,18 +280,25 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
             formatted_dates = result.get("formatted_dates", "Error: No dates found")
             if not formatted_dates or formatted_dates == "Error: No dates found":
                 logger.warning("No dates found in the image")
-                await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=image.filename))
+                try:
+                    await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=image.filename))
+                except Exception as e:
+                    logger.warning(f"Failed to re-upload image: {e}")
                 await interaction.followup.send("I couldn't find any tour dates in this image. Please make sure the image contains clear tour date information.")
                 return
-                
+
             logger.info(f"Sending formatted response to Discord: {formatted_dates}")
-            
+
             # Split long messages
             chunks = split_message(formatted_dates)
-            
+
             try:
-                # Send first chunk as initial response with the image
-                await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=image.filename))
+                # Try to send the image, but don't fail if it errors
+                try:
+                    await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=image.filename))
+                except Exception as e:
+                    logger.warning(f"Failed to re-upload image: {e}")
+
                 for i, chunk in enumerate(chunks):
                     message = f"```\n{chunk}\n```"
                     if i > 0:
@@ -299,11 +306,11 @@ async def image(interaction: discord.Interaction, image: discord.Attachment):
                     if i == len(chunks) - 1:
                         message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
                     await interaction.followup.send(message)
-                    
+
             except discord.NotFound:
                 logger.error("Interaction expired")
                 return
-                
+
     except asyncio.TimeoutError:
         logger.error("Request timed out")
         try:
@@ -377,18 +384,25 @@ async def imageurl(interaction: discord.Interaction, url: str):
             formatted_dates = result.get("formatted_dates", "Error: No dates found")
             if not formatted_dates or formatted_dates == "Error: No dates found":
                 logger.warning("No dates found in the image")
-                await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=filename))
+                try:
+                    await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=filename))
+                except Exception as e:
+                    logger.warning(f"Failed to re-upload image: {e}")
                 await interaction.followup.send("I couldn't find any tour dates in this image. Please make sure the image contains clear tour date information.")
                 return
-                
+
             logger.info(f"Sending formatted response to Discord: {formatted_dates}")
-            
+
             # Split long messages
             chunks = split_message(formatted_dates)
-            
+
             try:
-                # Send first chunk as initial response with the image
-                await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=filename))
+                # Try to send the image, but don't fail if it errors
+                try:
+                    await interaction.followup.send(file=discord.File(fp=BytesIO(image_data), filename=filename))
+                except Exception as e:
+                    logger.warning(f"Failed to re-upload image: {e}")
+
                 for i, chunk in enumerate(chunks):
                     message = f"```\n{chunk}\n```"
                     if i > 0:
@@ -396,7 +410,7 @@ async def imageurl(interaction: discord.Interaction, url: str):
                     if i == len(chunks) - 1:
                         message += "\nPlease double-check all info as Tour Date Drake can make mistakes."
                     await interaction.followup.send(message)
-                    
+
             except discord.NotFound:
                 logger.error("Interaction expired")
                 return
