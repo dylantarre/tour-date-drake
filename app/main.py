@@ -10,6 +10,8 @@ from pydantic import BaseModel
 from openai import OpenAI
 from dotenv import load_dotenv
 import imghdr
+from PIL import Image
+from io import BytesIO
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -325,6 +327,35 @@ Here are the dates to format: {text}"""
     logger.error(f"All models failed: {str(last_error)}", exc_info=True)
     raise last_error
 
+MAX_IMAGE_DIMENSION = 2048  # Max width or height
+MAX_IMAGE_BYTES = 1.5 * 1024 * 1024  # 1.5MB target for base64 payload
+
+def compress_image(image_bytes: bytes) -> tuple[bytes, str]:
+    """Compress and resize image to stay under TLS-safe payload sizes."""
+    img = Image.open(BytesIO(image_bytes))
+
+    # Convert RGBA/palette to RGB for JPEG
+    if img.mode in ("RGBA", "P", "LA"):
+        img = img.convert("RGB")
+
+    # Resize if dimensions are too large
+    width, height = img.size
+    if width > MAX_IMAGE_DIMENSION or height > MAX_IMAGE_DIMENSION:
+        img.thumbnail((MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION), Image.LANCZOS)
+        logger.info(f"Resized image from {width}x{height} to {img.size[0]}x{img.size[1]}")
+
+    # Compress as JPEG with decreasing quality until under target size
+    for quality in (85, 70, 50):
+        buf = BytesIO()
+        img.save(buf, format="JPEG", quality=quality, optimize=True)
+        compressed = buf.getvalue()
+        if len(compressed) <= MAX_IMAGE_BYTES:
+            logger.info(f"Compressed image to {len(compressed) / (1024*1024):.1f}MB (quality={quality})")
+            return compressed, "image/jpeg"
+
+    logger.info(f"Compressed image to {len(compressed) / (1024*1024):.1f}MB (quality=50, best effort)")
+    return compressed, "image/jpeg"
+
 class TextRequest(BaseModel):
     text: str
 
@@ -384,28 +415,24 @@ async def format_image(
             actual_type = imghdr.what(None, h=contents)
             if actual_type is None:
                 raise HTTPException(status_code=400, detail="Invalid image format")
-            
-            # Map imghdr types to MIME types
-            mime_types = {
-                'jpeg': 'image/jpeg',
-                'jpg': 'image/jpeg',
-                'png': 'image/png',
-                'gif': 'image/gif',
-                'webp': 'image/webp'
-            }
-            content_type = mime_types.get(actual_type, f'image/{actual_type}')
-            logger.info(f"Detected content type: {content_type}")
-            
+
+            logger.info(f"Detected content type: image/{actual_type}")
+
             try:
-                image_base64 = base64.b64encode(contents).decode('utf-8')
+                # Compress large images to avoid TLS payload issues
+                compressed, content_type = compress_image(contents)
+                del contents
+
+                image_base64 = base64.b64encode(compressed).decode('utf-8')
                 logger.info(f"Base64 size: {len(image_base64) / (1024 * 1024):.1f}MB")
+                del compressed
+
                 data_url = f"data:{content_type};base64,{image_base64}"
+                del image_base64
+
                 result = await process_image(client, data_url, is_url=False)
             finally:
-                # Explicitly delete large objects to help garbage collection
-                del contents
-                del image_base64
-                del data_url
+                pass
             
         logger.info("Successfully processed image")
         return {"formatted_dates": result}
